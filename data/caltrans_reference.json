@@ -1,0 +1,505 @@
+{
+  "metadata": {
+    "version": "2.0.0",
+    "last_updated": "2024-01-15",
+    "description": "Comprehensive CalTrans terminology cross-reference for bidding system",
+    "source": "CalTrans Standard Specifications and Bid Item Catalog"
+  },
+  "bridge_barrier_terms": {
+    "BALUSTER": {
+      "synonyms": ["concrete_bridge_railing_post", "heavy_formwork", "high_value_item"],
+      "description": "Concrete post for bridge railing system",
+      "category": "bridge_railing",
+      "priority": "high",
+      "unit": "each",
+      "typical_quantity": 50,
+      "material_calculation": {
+        "concrete_volume": 0.5,
+        "formwork_area": 8.0,
+        "reinforcement_weight": 15.0,
+        "waste_factor": 0.08
+      },
+      "production_rate": {
+        "installation": 4,
+        "formwork": 2,
+        "concrete_placement": 1
+      }
+    },
+    "BLOCKOUT": {
+      "synonyms": ["void_former", "temporary_formwork", "medium_value_item"],
+      "description": "Temporary formwork for creating voids in concrete",
+      "category": "formwork",
+      "priority": "medium",
+      "unit": "each",
+      "typical_quantity": 20,
+      "material_calculation": {
+        "formwork_area": 12.0,
+        "waste_factor": 0.15
+      },
+      "production_rate": {
+        "installation": 6,
+        "removal": 8
+      }
+    },
+    "TYPE_86H_RAIL": {
+      "synonyms": ["concrete_post_beam_bridge_rail", "engineered_formwork", "high_value_item"],
+      "description": "Engineered concrete bridge rail system",
+      "category": "bridge_railing",
+      "priority": "high",
+      "unit": "linear_foot",
+      "typical_quantity": 1000,
+      "material_calculation": {
+        "concrete_volume": 0.8,
+        "formwork_area": 15.0,
+        "reinforcement_weight": 25.0,
+        "waste_factor": 0.06
+      },
+      "production_rate": {
+        "installation": 20,
+        "formwork": 15,
+        "concrete_placement": 10
+      }
+    }
+  },
+  "formwork_terms": {
+    "FORM_FACING": {
+      "synonyms": ["form_sheathing", "contact_surface", "medium_value_item"],
+      "description": "Form sheathing material for concrete contact surface",
+      "category": "formwork",
+      "priority": "medium",
+      "unit": "square_foot",
+      "typical_quantity": 5000,
+      "material_calculation": {
+        "plywood_area": 1.0,
+        "waste_factor": 0.15,
+        "reuse_factor": 3
+      },
+      "production_rate": {
+        "installation": 100,
+        "removal": 150
+      }
+    },
+    "FALSEWORK": {
+      "synonyms": ["temporary_support_structure", "structural_temporary", "high_value_item"],
+      "description": "Temporary structural support for formwork",
+      "category": "temporary_structures",
+      "priority": "high",
+      "unit": "each",
+      "typical_quantity": 50,
+      "material_calculation": {
+        "steel_weight": 500.0,
+        "waste_factor": 0.05,
+        "reuse_factor": 20
+      },
+      "production_rate": {
+        "installation": 2,
+        "removal": 3
+      }
+    },
+    "STRIPPING": {
+      "synonyms": ["form_removal", "labor_intensive", "low_value_item"],
+      "description": "Removal of formwork after concrete curing",
+      "category": "formwork",
+      "priority": "low",
+      "unit": "square_foot",
+      "typical_quantity": 5000,
+      "material_calculation": {
+        "labor_hours": 0.02,
+        "waste_factor": 0.10
+      },
+      "production_rate": {
+        "removal": 200
+      }
+    },
+    "WALING": {
+      "synonyms": ["horizontal_form_brace", "structural_formwork", "medium_value_item"],
+      "description": "Horizontal bracing for formwork systems",
+      "category": "formwork",
+      "priority": "medium",
+      "unit": "linear_foot",
+      "typical_quantity": 1000,
+      "material_calculation": {
+        "lumber_volume": 0.1,
+        "waste_factor": 0.12,
+        "reuse_factor": 5
+      },
+      "production_rate": {
+        "installation": 50,
+        "removal": 75
+      }
+    }
+  },
+  "concrete_terms": {
+    "STAMPED_CONCRETE": {
+      "synonyms": ["textured_decorative_concrete", "architectural_formwork", "medium_value_item"],
+      "description": "Decorative concrete with textured surface",
+      "category": "architectural_concrete",
+      "priority": "medium",
+      "unit": "square_foot",
+      "typical_quantity": 2000,
+      "material_calculation": {
+        "concrete_volume": 0.25,
+        "formwork_area": 1.0,
+        "waste_factor": 0.10
+      },
+      "production_rate": {
+        "placement": 50,
+        "finishing": 25
+      }
+    },
+    "FRACTURED_RIB_TEXTURE": {
+      "synonyms": ["architectural_concrete_finish", "architectural_formwork", "high_value_item"],
+      "description": "Specialized concrete finish with ribbed texture",
+      "category": "architectural_concrete",
+      "priority": "high",
+      "unit": "square_foot",
+      "typical_quantity": 1000,
+      "material_calculation": {
+        "concrete_volume": 0.3,
+        "formwork_area": 1.2,
+        "waste_factor": 0.12
+      },
+      "production_rate": {
+        "placement": 30,
+        "finishing": 15
+      }
+    },
+    "RETAINING_WALL": {
+      "synonyms": ["concrete_wall_formwork", "structural_formwork", "medium_value_item"],
+      "description": "Concrete retaining wall with formwork",
+      "category": "structural_concrete",
+      "priority": "medium",
+      "unit": "square_foot",
+      "typical_quantity": 3000,
+      "material_calculation": {
+        "concrete_volume": 0.75,
+        "formwork_area": 2.0,
+        "reinforcement_weight": 20.0,
+        "waste_factor": 0.08
+      },
+      "production_rate": {
+        "formwork": 40,
+        "concrete_placement": 20,
+        "reinforcement": 100
+      }
+    }
+  },
+  "temporary_structures": {
+    "EROSION_CONTROL": {
+      "synonyms": ["silt_fence_check_dam", "temporary_support", "low_value_item"],
+      "description": "Temporary erosion control measures",
+      "category": "environmental",
+      "priority": "low",
+      "unit": "linear_foot",
+      "typical_quantity": 5000,
+      "material_calculation": {
+        "fabric_area": 1.0,
+        "stakes_count": 0.1,
+        "waste_factor": 0.20
+      },
+      "production_rate": {
+        "installation": 200,
+        "removal": 300
+      }
+    },
+    "CRIBBING": {
+      "synonyms": ["blocking_dunnage", "temporary_support", "low_value_item"],
+      "description": "Temporary blocking and dunnage",
+      "category": "temporary_structures",
+      "priority": "low",
+      "unit": "each",
+      "typical_quantity": 100,
+      "material_calculation": {
+        "lumber_volume": 0.5,
+        "waste_factor": 0.25,
+        "reuse_factor": 2
+      },
+      "production_rate": {
+        "installation": 10,
+        "removal": 15
+      }
+    }
+  },
+  "quantity_patterns": {
+    "measurement_units": {
+      "SQFT": {
+        "regex_patterns": [
+          "(\\d+(?:\\.\\d+)?)\\s*(?:SQ\\s*FT|SQFT|SF|SQUARE\\s*FEET?)",
+          "(\\d+(?:\\.\\d+)?)\\s*(?:SQ\\s*YARDS?|SQYD|SY)",
+          "(\\d+(?:\\.\\d+)?)\\s*(?:SQ\\s*METERS?|SQM)"
+        ],
+        "conversions": {
+          "sqft_to_sqyd": 0.111,
+          "sqft_to_sqm": 0.093,
+          "sqyd_to_sqft": 9.0,
+          "sqm_to_sqft": 10.764
+        }
+      },
+      "LF": {
+        "regex_patterns": [
+          "(\\d+(?:\\.\\d+)?)\\s*(?:LF|LINEAR\\s*FEET?|LINEAR\\s*FT)",
+          "(\\d+(?:\\.\\d+)?)\\s*(?:LY|LINEAR\\s*YARDS?)",
+          "(\\d+(?:\\.\\d+)?)\\s*(?:LM|LINEAR\\s*METERS?)"
+        ],
+        "conversions": {
+          "lf_to_ly": 0.333,
+          "lf_to_lm": 0.305,
+          "ly_to_lf": 3.0,
+          "lm_to_lf": 3.281
+        }
+      },
+      "CY": {
+        "regex_patterns": [
+          "(\\d+(?:\\.\\d+)?)\\s*(?:CY|CUBIC\\s*YARDS?|CU\\s*YD)",
+          "(\\d+(?:\\.\\d+)?)\\s*(?:CF|CUBIC\\s*FEET?|CU\\s*FT)",
+          "(\\d+(?:\\.\\d+)?)\\s*(?:CM|CUBIC\\s*METERS?|CU\\s*M)"
+        ],
+        "conversions": {
+          "cy_to_cf": 27.0,
+          "cy_to_cm": 0.765,
+          "cf_to_cy": 0.037,
+          "cm_to_cy": 1.308
+        }
+      },
+      "EA": {
+        "regex_patterns": [
+          "(\\d+(?:\\.\\d+)?)\\s*(?:EA|EACH|EACHES?)",
+          "(\\d+(?:\\.\\d+)?)\\s*(?:PCS?|PIECES?)",
+          "(\\d+(?:\\.\\d+)?)\\s*(?:UNITS?|UN)"
+        ],
+        "conversions": {
+          "ea_to_pcs": 1.0,
+          "pcs_to_ea": 1.0
+        }
+      }
+    },
+    "quantity_extraction": {
+      "patterns": {
+        "quantity_with_unit": "(\\d+(?:,\\d{3})*(?:\\.\\d+)?)\\s*([A-Z]{2,4})",
+        "quantity_in_text": "(?:QUANTITY|QTY|AMOUNT)[:\\s]*(\\d+(?:,\\d{3})*(?:\\.\\d+)?)",
+        "range_quantity": "(\\d+(?:\\.\\d+)?)\\s*-\\s*(\\d+(?:\\.\\d+)?)\\s*([A-Z]{2,4})",
+        "approximate_quantity": "(?:APPROX|EST|~)\\s*(\\d+(?:\\.\\d+)?)\\s*([A-Z]{2,4})"
+      },
+      "default_units": {
+        "concrete": "CY",
+        "formwork": "SQFT",
+        "reinforcement": "LB",
+        "structural": "EA"
+      }
+    }
+  },
+  "alert_triggers": {
+    "high_priority_terms": {
+      "terms": [
+        "BALUSTER",
+        "TYPE_86H_RAIL",
+        "FALSEWORK",
+        "FRACTURED_RIB_TEXTURE"
+      ],
+      "alert_message": "High-value item detected - review pricing carefully",
+      "priority_level": "high"
+    },
+    "quantity_thresholds": {
+      "high_volume": {
+        "SQFT": 10000,
+        "LF": 5000,
+        "CY": 1000,
+        "EA": 500
+      },
+      "medium_volume": {
+        "SQFT": 5000,
+        "LF": 2500,
+        "CY": 500,
+        "EA": 250
+      },
+      "alert_messages": {
+        "high_volume": "High volume item - consider bulk pricing and production efficiency",
+        "medium_volume": "Medium volume item - review production rates and material requirements"
+      }
+    },
+    "cost_thresholds": {
+      "high_cost": 50000,
+      "medium_cost": 25000,
+      "alert_messages": {
+        "high_cost": "High-cost item - detailed cost analysis required",
+        "medium_cost": "Medium-cost item - review pricing strategy"
+      }
+    }
+  },
+  "material_calculations": {
+    "concrete": {
+      "density": 150,
+      "unit": "pcf",
+      "waste_factors": {
+        "structural": 0.05,
+        "architectural": 0.10,
+        "lightweight": 0.08,
+        "high_performance": 0.06
+      },
+      "formwork_ratios": {
+        "wall": 2.0,
+        "column": 3.0,
+        "beam": 2.5,
+        "deck": 1.0
+      }
+    },
+    "reinforcement": {
+      "density": 490,
+      "unit": "pcf",
+      "waste_factors": {
+        "rebar": 0.10,
+        "wire_mesh": 0.05,
+        "post_tensioning": 0.08
+      },
+      "coverage_rates": {
+        "deck": 0.15,
+        "wall": 0.25,
+        "column": 0.30,
+        "beam": 0.20
+      }
+    },
+    "formwork": {
+      "waste_factors": {
+        "plywood": 0.15,
+        "steel": 0.02,
+        "aluminum": 0.01,
+        "lumber": 0.12
+      },
+      "reuse_factors": {
+        "plywood": 3,
+        "steel": 50,
+        "aluminum": 100,
+        "lumber": 5
+      }
+    }
+  },
+  "production_rates": {
+    "concrete_placement": {
+      "bridge_deck": {
+        "rate": 20,
+        "unit": "CY/hour",
+        "crew_size": 8,
+        "factors": {
+          "weather": 0.8,
+          "access": 0.9,
+          "quality": 0.95
+        }
+      },
+      "bridge_abutment": {
+        "rate": 15,
+        "unit": "CY/hour",
+        "crew_size": 6,
+        "factors": {
+          "weather": 0.8,
+          "access": 0.85,
+          "quality": 0.95
+        }
+      },
+      "retaining_wall": {
+        "rate": 12,
+        "unit": "CY/hour",
+        "crew_size": 5,
+        "factors": {
+          "weather": 0.8,
+          "access": 0.9,
+          "quality": 0.95
+        }
+      }
+    },
+    "formwork_installation": {
+      "wall_forms": {
+        "rate": 100,
+        "unit": "SQFT/hour",
+        "crew_size": 4,
+        "factors": {
+          "complexity": 0.8,
+          "height": 0.9
+        }
+      },
+      "deck_forms": {
+        "rate": 80,
+        "unit": "SQFT/hour",
+        "crew_size": 6,
+        "factors": {
+          "complexity": 0.85,
+          "access": 0.9
+        }
+      },
+      "column_forms": {
+        "rate": 20,
+        "unit": "LF/hour",
+        "crew_size": 3,
+        "factors": {
+          "diameter": 0.9,
+          "height": 0.85
+        }
+      }
+    },
+    "reinforcement_installation": {
+      "bridge_deck": {
+        "rate": 500,
+        "unit": "LB/hour",
+        "crew_size": 4,
+        "factors": {
+          "spacing": 0.9,
+          "complexity": 0.85
+        }
+      },
+      "bridge_abutment": {
+        "rate": 300,
+        "unit": "LB/hour",
+        "crew_size": 3,
+        "factors": {
+          "spacing": 0.9,
+          "access": 0.85
+        }
+      },
+      "retaining_wall": {
+        "rate": 250,
+        "unit": "LB/hour",
+        "crew_size": 3,
+        "factors": {
+          "spacing": 0.9,
+          "access": 0.8
+        }
+      }
+    }
+  },
+  "cross_references": {
+    "term_to_category": {
+      "BALUSTER": "bridge_railing",
+      "BLOCKOUT": "formwork",
+      "TYPE_86H_RAIL": "bridge_railing",
+      "FORM_FACING": "formwork",
+      "FALSEWORK": "temporary_structures",
+      "STRIPPING": "formwork",
+      "WALING": "formwork",
+      "STAMPED_CONCRETE": "architectural_concrete",
+      "FRACTURED_RIB_TEXTURE": "architectural_concrete",
+      "RETAINING_WALL": "structural_concrete",
+      "EROSION_CONTROL": "environmental",
+      "CRIBBING": "temporary_structures"
+    },
+    "category_to_terms": {
+      "bridge_railing": ["BALUSTER", "TYPE_86H_RAIL"],
+      "formwork": ["BLOCKOUT", "FORM_FACING", "STRIPPING", "WALING"],
+      "temporary_structures": ["FALSEWORK", "CRIBBING"],
+      "architectural_concrete": ["STAMPED_CONCRETE", "FRACTURED_RIB_TEXTURE"],
+      "structural_concrete": ["RETAINING_WALL"],
+      "environmental": ["EROSION_CONTROL"]
+    }
+  },
+  "specification_references": {
+    "caltrans_specs": {
+      "bridge_railing": ["Section 86", "Section 87"],
+      "formwork": ["Section 40", "Section 41"],
+      "concrete": ["Section 90", "Section 91", "Section 92"],
+      "temporary_structures": ["Section 15", "Section 16"]
+    },
+    "astm_standards": {
+      "concrete": ["ASTM C150", "ASTM C33", "ASTM C494"],
+      "formwork": ["ASTM D1037", "ASTM D2395"],
+      "reinforcement": ["ASTM A615", "ASTM A706"]
+    }
+  }
+} 
