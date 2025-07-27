@@ -329,6 +329,96 @@ class CalTransPDFAnalyzer:
         
         return patterns
     
+    def analyze_pdf_with_progress(self, pdf_content: bytes, progress_callback=None) -> CalTransAnalysisResult:
+        """
+        Analyze a CalTrans PDF with progress tracking
+        
+        Args:
+            pdf_content: PDF content as bytes
+            progress_callback: Callback function for progress updates
+                Signature: callback(current_page, total_pages, terms_count, quantities_count, elapsed_time)
+            
+        Returns:
+            CalTransAnalysisResult with complete analysis
+        """
+        start_time = datetime.now()
+        
+        self.logger.info("Starting analysis of PDF with progress tracking")
+        
+        # Initialize result
+        result = CalTransAnalysisResult(pdf_path="uploaded_pdf")
+        
+        try:
+            import io
+            with pdfplumber.open(io.BytesIO(pdf_content)) as pdf:
+                result.total_pages = len(pdf.pages)
+                self.logger.info(f"PDF has {result.total_pages} pages")
+                
+                total_terms = 0
+                total_quantities = 0
+                
+                # Analyze each page
+                for page_num, page in enumerate(pdf.pages, 1):
+                    self.logger.info(f"Analyzing page {page_num}/{result.total_pages}")
+                    
+                    # Extract text from page
+                    text = page.extract_text() or ""
+                    
+                    # Analyze the page
+                    sheet_analysis = self.analyze_page(text, page_num)
+                    result.sheet_analyses.append(sheet_analysis)
+                    
+                    # Aggregate results
+                    result.terminology_found.extend(sheet_analysis.terms_found)
+                    result.quantities.extend(sheet_analysis.quantities_found)
+                    result.alerts.extend(sheet_analysis.alerts)
+                    
+                    # Update counters
+                    total_terms = len(result.terminology_found)
+                    total_quantities = len(result.quantities)
+                    elapsed_time = (datetime.now() - start_time).total_seconds()
+                    
+                    # Call progress callback if provided
+                    if progress_callback:
+                        try:
+                            progress_callback(page_num, result.total_pages, total_terms, total_quantities, elapsed_time)
+                        except Exception as e:
+                            self.logger.warning(f"Progress callback failed: {e}")
+                
+                # Calculate lumber requirements
+                result.total_lumber_requirements = self.calculate_lumber_requirements(
+                    result.terminology_found, result.quantities
+                )
+                
+                # Generate summary statistics
+                result.high_priority_terms = len([
+                    t for t in result.terminology_found 
+                    if t.priority in ["high", "critical"]
+                ])
+                result.total_quantities = len(result.quantities)
+                result.critical_alerts = len([
+                    a for a in result.alerts 
+                    if a.level in [AlertLevel.HIGH, AlertLevel.CRITICAL]
+                ])
+                
+                # Calculate quality metrics
+                if result.sheet_analyses:
+                    result.text_extraction_quality = sum(
+                        sa.text_extraction_quality for sa in result.sheet_analyses
+                    ) / len(result.sheet_analyses)
+                
+                result.processing_time = (datetime.now() - start_time).total_seconds()
+                
+                self.logger.info(f"Analysis completed in {result.processing_time:.2f} seconds")
+                self.logger.info(f"Found {len(result.terminology_found)} terms, {len(result.quantities)} quantities")
+                
+        except Exception as e:
+            self.logger.error(f"Error analyzing PDF: {e}")
+            self.logger.error(traceback.format_exc())
+            raise
+        
+        return result
+
     def analyze_pdf(self, pdf_path: str) -> CalTransAnalysisResult:
         """
         Analyze a CalTrans PDF file

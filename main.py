@@ -436,34 +436,135 @@ def render_analyze_pdf():
     if uploaded_data:
         st.session_state.uploaded_files.append(uploaded_data)
         
-        # Analyze the PDF
-        with st.spinner("Analyzing CalTrans PDF..."):
-            try:
-                analyzer = CalTransPDFAnalyzer()
-                analysis_result = analyzer.analyze_pdf(uploaded_data['content'])
+        # Create progress tracking
+        progress_container = st.container()
+        status_container = st.container()
+        metrics_container = st.container()
+        
+        with progress_container:
+            st.subheader("📊 Analysis Progress")
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            time_estimate = st.empty()
+            
+        with status_container:
+            st.subheader("🔍 Analysis Status")
+            current_step = st.empty()
+            details_text = st.empty()
+            
+        with metrics_container:
+            st.subheader("📈 Real-time Metrics")
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                pages_processed = st.metric("Pages Processed", "0")
+            with col2:
+                terms_found = st.metric("Terms Found", "0")
+            with col3:
+                quantities_found = st.metric("Quantities Found", "0")
+            with col4:
+                processing_time = st.metric("Processing Time", "0.0s")
+        
+        # Analyze the PDF with progress tracking
+        try:
+            analyzer = CalTransPDFAnalyzer()
+            
+            # Initialize progress tracking
+            total_pages = 0
+            start_time = datetime.now()
+            
+            # First pass to count pages and estimate time
+            with status_text.container():
+                st.info("🔍 Scanning PDF structure...")
+            
+            # Estimate processing time based on file size
+            file_size_mb = len(uploaded_data['content']) / (1024 * 1024)
+            estimated_time_per_page = 2.5  # seconds per page (conservative estimate)
+            
+            # Count pages quickly
+            import io
+            import pdfplumber
+            pdf_content = io.BytesIO(uploaded_data['content'])
+            with pdfplumber.open(pdf_content) as pdf:
+                total_pages = len(pdf.pages)
+            
+            estimated_total_time = total_pages * estimated_time_per_page
+            
+            with time_estimate.container():
+                st.info(f"📊 File: {file_size_mb:.1f} MB, {total_pages} pages")
+                st.info(f"⏱️ Estimated processing time: {estimated_total_time:.1f} seconds")
+                st.info(f"⚡ Processing speed: ~{estimated_time_per_page:.1f}s per page")
+            
+            # Show initial progress
+            progress_bar.progress(0)
+            with status_text.container():
+                st.info("🚀 Starting PDF analysis...")
+            
+            # Create a simple progress indicator
+            progress_text = st.empty()
+            with st.spinner("Analyzing PDF pages..."):
+                # Update progress message
+                progress_text.text(f"📄 Processing {total_pages} pages... This may take {estimated_total_time:.1f} seconds")
                 
-                if analysis_result:
+                # Perform analysis with progress tracking
+                analysis_result = analyzer.analyze_pdf_with_progress(
+                    uploaded_data['content'], 
+                    None  # Disable callback for now to avoid Streamlit issues
+                )
+            
+            if analysis_result:
+                # Final progress update
+                progress_bar.progress(1.0)
+                progress_text.text("✅ Analysis complete!")
+                with status_text.container():
                     st.success("✅ PDF analysis completed successfully!")
+                
+                with current_step.container():
+                    st.success("🎉 Analysis complete! Generating final report...")
+                
+                # Update system status
+                st.session_state.system_status['pdf_analyzed'] = True
+                st.session_state.system_status['last_update'] = datetime.now()
+                
+                # Store analysis results
+                st.session_state.analysis_results[uploaded_data['filename']] = analysis_result
+                
+                # Display final metrics
+                with metrics_container:
+                    st.subheader("📊 Final Analysis Results")
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Total Pages", analysis_result.total_pages)
+                    with col2:
+                        st.metric("Terms Found", len(analysis_result.terminology_found))
+                    with col3:
+                        st.metric("Quantities Found", len(analysis_result.quantities))
+                    with col4:
+                        st.metric("Processing Time", f"{analysis_result.processing_time:.1f}s")
                     
-                    # Update system status
-                    st.session_state.system_status['pdf_analyzed'] = True
-                    st.session_state.system_status['last_update'] = datetime.now()
+                    # Show performance comparison
+                    actual_time_per_page = analysis_result.processing_time / analysis_result.total_pages
+                    time_difference = estimated_time_per_page - actual_time_per_page
+                    performance_status = "🟢 Faster than estimated" if time_difference > 0 else "🟡 Slower than estimated"
                     
-                    # Store analysis results
-                    st.session_state.analysis_results[uploaded_data['filename']] = analysis_result
-                    
-                    # Display analysis results
-                    display_component = AnalysisDisplayComponent()
-                    display_component.render_analysis_overview(analysis_result)
-                    
-                    # Export options
-                    render_analysis_export(analysis_result)
-                    
-                else:
+                    st.info(f"⚡ Actual processing speed: {actual_time_per_page:.1f}s per page")
+                    st.info(f"📈 {performance_status} (estimated: {estimated_time_per_page:.1f}s, actual: {actual_time_per_page:.1f}s)")
+                
+                # Display analysis results
+                display_component = AnalysisDisplayComponent()
+                display_component.render_analysis_overview(analysis_result)
+                
+                # Export options
+                render_analysis_export(analysis_result)
+                
+            else:
+                with status_text.container():
                     st.error("❌ Failed to analyze the uploaded PDF.")
                     
-            except Exception as e:
+        except Exception as e:
+            with status_text.container():
                 st.error(f"❌ Error analyzing PDF: {str(e)}")
+            with current_step.container():
+                st.error("💥 Analysis failed. Please check the file format and try again.")
     
     # Analysis comparison (if multiple analyses exist)
     if len(st.session_state.analysis_results) > 1:
