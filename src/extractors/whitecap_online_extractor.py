@@ -72,8 +72,9 @@ except ImportError:
             self.total_items = total_items
             self.current_item = 0
         
-        def update_progress(self, message, progress):
-            self.current_item = int(progress * self.total_items)
+        def update(self, item_id: str, success: bool = True, message: str = "") -> None:
+            """Update progress for an item"""
+            self.current_item += 1
         
         def get_progress(self):
             return {"current_item": self.current_item, "total_items": self.total_items}
@@ -150,7 +151,7 @@ class OnlineExtractionConfig:
     enable_validation: bool = True
     export_format: str = "csv"
     rate_limit_delay: float = 1.0  # seconds between requests
-    use_selenium: bool = True
+    use_selenium: bool = False  # Disabled by default
     headless_browser: bool = True
     timeout_seconds: int = 30
     max_retries: int = 3
@@ -355,9 +356,10 @@ class WhitecapOnlineExtractor:
                     continue
                 
                 if self.progress_tracker:
-                    self.progress_tracker.update_progress(
-                        f"Processing category: {category_name}",
-                        self.stats["categories_processed"] / len(categories)
+                    self.progress_tracker.update(
+                        category_name, 
+                        success=True, 
+                        message=f"Processing category: {category_name}"
                     )
                 
                 try:
@@ -869,6 +871,42 @@ class WhitecapOnlineExtractor:
                 "subcategory": "Adhesive Anchor Dispensing Guns",
                 "availability": "Ready to Ship",
                 "mfg_number": "08286PWR"
+            },
+            {
+                "sku": "21112345",
+                "product_name": "3/8\" Concrete Anchor Kit",
+                "description": "3/8\" Concrete Anchor Kit with drill bit and setting tool",
+                "size": "3/8\"",
+                "unit": "EA",
+                "price": 15.99,
+                "category": ProductCategory.ANCHORING_FASTENERS,
+                "subcategory": "Concrete Anchors",
+                "availability": "Ready to Ship",
+                "mfg_number": "CAK-38"
+            },
+            {
+                "sku": "21123456",
+                "product_name": "Safety Harness with Lanyard",
+                "description": "Full body safety harness with 6ft lanyard",
+                "size": "Universal",
+                "unit": "EA",
+                "price": 89.99,
+                "category": ProductCategory.SAFETY,
+                "subcategory": "Fall Protection",
+                "availability": "Ready to Ship",
+                "mfg_number": "SH-6FT"
+            },
+            {
+                "sku": "21134567",
+                "product_name": "Concrete Form Tie 1/2\" x 8\"",
+                "description": "Heavy duty concrete form tie for construction",
+                "size": "1/2\" x 8\"",
+                "unit": "EA",
+                "price": 0.85,
+                "category": ProductCategory.CONCRETE_FORMING,
+                "subcategory": "Form Ties",
+                "availability": "Ready to Ship",
+                "mfg_number": "CFT-12-8"
             }
         ]
         
