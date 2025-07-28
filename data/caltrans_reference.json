@@ -12,17 +12,22 @@
       "category": "bridge_railing",
       "priority": "high",
       "unit": "each",
-      "typical_quantity": 50,
       "material_calculation": {
-        "concrete_volume": 0.5,
-        "formwork_area": 8.0,
-        "reinforcement_weight": 15.0,
+        "concrete_volume_per_unit": 0.5,
+        "formwork_area_per_unit": 8.0,
+        "reinforcement_weight_per_unit": 15.0,
         "waste_factor": 0.08
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*EA\\s*BALUSTER",
+        "(?i)BALUSTER.*?(\\d+)\\s*EACH",
+        "(?i)(\\d+)\\s*CONCRETE.*?POST",
+        "(?i)BRIDGE.*?RAILING.*?(\\d+)\\s*POSTS?"
+      ],
       "production_rate": {
-        "installation": 4,
-        "formwork": 2,
-        "concrete_placement": 1
+        "installation_per_day": 4,
+        "formwork_per_day": 2,
+        "concrete_placement_per_day": 1
       }
     },
     "BLOCKOUT": {
@@ -31,14 +36,19 @@
       "category": "formwork",
       "priority": "medium",
       "unit": "each",
-      "typical_quantity": 20,
       "material_calculation": {
-        "formwork_area": 12.0,
+        "formwork_area_per_unit": 12.0,
         "waste_factor": 0.15
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*EA\\s*BLOCKOUT",
+        "(?i)BLOCKOUT.*?(\\d+)\\s*EACH",
+        "(?i)(\\d+)\\s*VOID.*?FORMER",
+        "(?i)TEMPORARY.*?FORMWORK.*?(\\d+)"
+      ],
       "production_rate": {
-        "installation": 6,
-        "removal": 8
+        "installation_per_day": 6,
+        "removal_per_day": 8
       }
     },
     "TYPE_86H_RAIL": {
@@ -47,17 +57,22 @@
       "category": "bridge_railing",
       "priority": "high",
       "unit": "linear_foot",
-      "typical_quantity": 1000,
       "material_calculation": {
-        "concrete_volume": 0.8,
-        "formwork_area": 15.0,
-        "reinforcement_weight": 25.0,
+        "concrete_volume_per_unit": 0.8,
+        "formwork_area_per_unit": 15.0,
+        "reinforcement_weight_per_unit": 25.0,
         "waste_factor": 0.06
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*LF\\s*TYPE\\s*86H\\s*RAIL",
+        "(?i)TYPE\\s*86H.*?(\\d+)\\s*LINEAR\\s*FEET?",
+        "(?i)(\\d+)\\s*ENGINEERED.*?BRIDGE.*?RAIL",
+        "(?i)BRIDGE.*?RAIL.*?SYSTEM.*?(\\d+)\\s*LF"
+      ],
       "production_rate": {
-        "installation": 20,
-        "formwork": 15,
-        "concrete_placement": 10
+        "installation_per_day": 20,
+        "formwork_per_day": 15,
+        "concrete_placement_per_day": 10
       }
     }
   },
@@ -68,15 +83,20 @@
       "category": "formwork",
       "priority": "medium",
       "unit": "square_foot",
-      "typical_quantity": 5000,
       "material_calculation": {
-        "plywood_area": 1.0,
+        "plywood_area_per_unit": 1.0,
         "waste_factor": 0.15,
         "reuse_factor": 3
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*SQFT\\s*FORM\\s*FACING",
+        "(?i)FORM\\s*FACING.*?(\\d+)\\s*SQUARE\\s*FEET?",
+        "(?i)(\\d+)\\s*FORM\\s*SHEATHING",
+        "(?i)CONTACT\\s*SURFACE.*?(\\d+)\\s*SQFT"
+      ],
       "production_rate": {
-        "installation": 100,
-        "removal": 150
+        "installation_per_day": 100,
+        "removal_per_day": 150
       }
     },
     "FALSEWORK": {
@@ -85,15 +105,20 @@
       "category": "temporary_structures",
       "priority": "high",
       "unit": "each",
-      "typical_quantity": 50,
       "material_calculation": {
-        "steel_weight": 500.0,
+        "steel_weight_per_unit": 500.0,
         "waste_factor": 0.05,
         "reuse_factor": 20
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*EA\\s*FALSEWORK",
+        "(?i)FALSEWORK.*?(\\d+)\\s*EACH",
+        "(?i)(\\d+)\\s*TEMPORARY.*?SUPPORT",
+        "(?i)STRUCTURAL.*?SUPPORT.*?(\\d+)"
+      ],
       "production_rate": {
-        "installation": 2,
-        "removal": 3
+        "installation_per_day": 2,
+        "removal_per_day": 3
       }
     },
     "STRIPPING": {
@@ -102,13 +127,18 @@
       "category": "formwork",
       "priority": "low",
       "unit": "square_foot",
-      "typical_quantity": 5000,
       "material_calculation": {
-        "labor_hours": 0.02,
+        "labor_hours_per_unit": 0.02,
         "waste_factor": 0.10
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*SQFT\\s*STRIPPING",
+        "(?i)STRIPPING.*?(\\d+)\\s*SQUARE\\s*FEET?",
+        "(?i)(\\d+)\\s*FORM\\s*REMOVAL",
+        "(?i)FORMWORK.*?REMOVAL.*?(\\d+)\\s*SQFT"
+      ],
       "production_rate": {
-        "removal": 200
+        "removal_per_day": 200
       }
     },
     "WALING": {
@@ -117,15 +147,20 @@
       "category": "formwork",
       "priority": "medium",
       "unit": "linear_foot",
-      "typical_quantity": 1000,
       "material_calculation": {
-        "lumber_volume": 0.1,
+        "lumber_volume_per_unit": 0.1,
         "waste_factor": 0.12,
         "reuse_factor": 5
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*LF\\s*WALING",
+        "(?i)WALING.*?(\\d+)\\s*LINEAR\\s*FEET?",
+        "(?i)(\\d+)\\s*HORIZONTAL.*?BRACE",
+        "(?i)FORMWORK.*?BRACING.*?(\\d+)\\s*LF"
+      ],
       "production_rate": {
-        "installation": 50,
-        "removal": 75
+        "installation_per_day": 50,
+        "removal_per_day": 75
       }
     }
   },
@@ -136,15 +171,20 @@
       "category": "architectural_concrete",
       "priority": "medium",
       "unit": "square_foot",
-      "typical_quantity": 2000,
       "material_calculation": {
-        "concrete_volume": 0.25,
-        "formwork_area": 1.0,
+        "concrete_volume_per_unit": 0.25,
+        "formwork_area_per_unit": 1.0,
         "waste_factor": 0.10
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*SQFT\\s*STAMPED\\s*CONCRETE",
+        "(?i)STAMPED\\s*CONCRETE.*?(\\d+)\\s*SQUARE\\s*FEET?",
+        "(?i)(\\d+)\\s*TEXTURED.*?DECORATIVE",
+        "(?i)DECORATIVE.*?CONCRETE.*?(\\d+)\\s*SQFT"
+      ],
       "production_rate": {
-        "placement": 50,
-        "finishing": 25
+        "placement_per_day": 50,
+        "finishing_per_day": 25
       }
     },
     "FRACTURED_RIB_TEXTURE": {
@@ -153,15 +193,20 @@
       "category": "architectural_concrete",
       "priority": "high",
       "unit": "square_foot",
-      "typical_quantity": 1000,
       "material_calculation": {
-        "concrete_volume": 0.3,
-        "formwork_area": 1.2,
+        "concrete_volume_per_unit": 0.3,
+        "formwork_area_per_unit": 1.2,
         "waste_factor": 0.12
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*SQFT\\s*FRACTURED\\s*RIB\\s*TEXTURE",
+        "(?i)FRACTURED\\s*RIB.*?(\\d+)\\s*SQUARE\\s*FEET?",
+        "(?i)(\\d+)\\s*ARCHITECTURAL.*?FINISH",
+        "(?i)RIBED.*?TEXTURE.*?(\\d+)\\s*SQFT"
+      ],
       "production_rate": {
-        "placement": 30,
-        "finishing": 15
+        "placement_per_day": 30,
+        "finishing_per_day": 15
       }
     },
     "RETAINING_WALL": {
@@ -170,17 +215,22 @@
       "category": "structural_concrete",
       "priority": "medium",
       "unit": "square_foot",
-      "typical_quantity": 3000,
       "material_calculation": {
-        "concrete_volume": 0.75,
-        "formwork_area": 2.0,
-        "reinforcement_weight": 20.0,
+        "concrete_volume_per_unit": 0.75,
+        "formwork_area_per_unit": 2.0,
+        "reinforcement_weight_per_unit": 20.0,
         "waste_factor": 0.08
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*SQFT\\s*RETAINING\\s*WALL",
+        "(?i)RETAINING\\s*WALL.*?(\\d+)\\s*SQUARE\\s*FEET?",
+        "(?i)(\\d+)\\s*CONCRETE.*?WALL.*?FORMWORK",
+        "(?i)STRUCTURAL.*?WALL.*?(\\d+)\\s*SQFT"
+      ],
       "production_rate": {
-        "formwork": 40,
-        "concrete_placement": 20,
-        "reinforcement": 100
+        "formwork_per_day": 40,
+        "concrete_placement_per_day": 20,
+        "reinforcement_per_day": 100
       }
     }
   },
@@ -191,15 +241,20 @@
       "category": "environmental",
       "priority": "low",
       "unit": "linear_foot",
-      "typical_quantity": 5000,
       "material_calculation": {
-        "fabric_area": 1.0,
-        "stakes_count": 0.1,
+        "fabric_area_per_unit": 1.0,
+        "stakes_count_per_unit": 0.1,
         "waste_factor": 0.20
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*LF\\s*EROSION\\s*CONTROL",
+        "(?i)EROSION\\s*CONTROL.*?(\\d+)\\s*LINEAR\\s*FEET?",
+        "(?i)(\\d+)\\s*SILT\\s*FENCE",
+        "(?i)TEMPORARY.*?EROSION.*?(\\d+)\\s*LF"
+      ],
       "production_rate": {
-        "installation": 200,
-        "removal": 300
+        "installation_per_day": 200,
+        "removal_per_day": 300
       }
     },
     "CRIBBING": {
@@ -208,15 +263,20 @@
       "category": "temporary_structures",
       "priority": "low",
       "unit": "each",
-      "typical_quantity": 100,
       "material_calculation": {
-        "lumber_volume": 0.5,
+        "lumber_volume_per_unit": 0.5,
         "waste_factor": 0.25,
         "reuse_factor": 2
       },
+      "quantity_extraction_patterns": [
+        "(?i)(\\d+)\\s*EA\\s*CRIBBING",
+        "(?i)CRIBBING.*?(\\d+)\\s*EACH",
+        "(?i)(\\d+)\\s*BLOCKING.*?DUNNAGE",
+        "(?i)TEMPORARY.*?BLOCKING.*?(\\d+)"
+      ],
       "production_rate": {
-        "installation": 10,
-        "removal": 15
+        "installation_per_day": 10,
+        "removal_per_day": 15
       }
     }
   },

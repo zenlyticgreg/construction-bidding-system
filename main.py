@@ -183,7 +183,7 @@ def convert_analysis_result_to_ui_format(analysis_result) -> Dict[str, Any]:
         'quantities': [
             {
                 'item': q.item,
-                'quantity': q.quantity,
+                'quantity': q.value,
                 'unit': q.unit,
                 'page_number': q.page_number,
                 'confidence': q.confidence
@@ -192,23 +192,23 @@ def convert_analysis_result_to_ui_format(analysis_result) -> Dict[str, Any]:
         ],
         'alerts': [
             {
-                'type': alert.type,
+                'type': alert.level.value,
                 'message': alert.message,
-                'severity': alert.severity,
+                'severity': alert.level.value,
                 'page_number': alert.page_number
             }
             for alert in analysis_result.alerts
         ],
         'lumber_requirements': {
-            'total_board_feet': analysis_result.lumber_requirements.total_board_feet,
-            'breakdown': analysis_result.lumber_requirements.breakdown,
-            'estimated_cost': analysis_result.lumber_requirements.estimated_cost
-        } if analysis_result.lumber_requirements else {},
+            'total_board_feet': analysis_result.total_lumber_requirements.total_board_feet,
+            'breakdown': analysis_result.total_lumber_requirements.dimensional_lumber,
+            'estimated_cost': analysis_result.total_lumber_requirements.estimated_cost
+        } if analysis_result.total_lumber_requirements else {},
         'summary': {
             'total_terms_found': len(analysis_result.terminology_found),
             'total_quantities': len(analysis_result.quantities),
             'total_alerts': len(analysis_result.alerts),
-            'analysis_confidence': analysis_result.analysis_confidence,
+            'analysis_confidence': analysis_result.confidence_score,
             'processing_time': analysis_result.processing_time
         }
     }

@@ -279,7 +279,7 @@ class WhitecapOnlineExtractor:
             
             # Use webdriver-manager to handle driver installation
             driver_path = ChromeDriverManager().install()
-            driver = webdriver.Chrome(executable_path=driver_path, options=chrome_options)
+            driver = webdriver.Chrome(options=chrome_options)
             
             # Execute script to remove webdriver property
             driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
@@ -446,15 +446,41 @@ class WhitecapOnlineExtractor:
                 
                 soup = BeautifulSoup(response.content, 'html.parser')
                 
-                # Look for category links
-                category_links = soup.find_all('a', href=re.compile(r'category|cat|products'))
+                # Look for category links with the specific Whitecap URL pattern
+                category_links = soup.find_all('a', href=re.compile(r'/catalog/.*-en'))
                 
+                # Also look for navigation menu items that might contain categories
+                nav_links = soup.find_all('a', href=True)
+                
+                # Define known product categories based on the screenshot
+                known_categories = [
+                    'adhesives', 'caulk', 'sealants', 'anchoring', 'fasteners', 'brick', 'stone',
+                    'building materials', 'cleaning', 'tools', 'supplies', 'concrete', 'chemicals',
+                    'forming', 'electrical', 'lighting', 'erosion', 'control', 'hand tools',
+                    'jobsite', 'security', 'ladders', 'scaffolding', 'masonry', 'block', 'pavers',
+                    'mortars', 'material handling', 'storage', 'measuring', 'marking', 'surveying',
+                    'power tools', 'equipment', 'safety', 'waterproofing', 'specials', 'deals'
+                ]
+                
+                # Process catalog links first (these are the main product categories)
                 for link in category_links:
                     category_name = link.text.strip()
                     category_url = urljoin(self.config.base_url, link.get('href'))
                     
                     if category_name and category_url and len(category_name) > 2:
                         categories[category_name] = category_url
+                
+                # If we didn't find enough categories, try navigation links
+                if len(categories) < 5:
+                    for link in nav_links:
+                        category_name = link.text.strip()
+                        category_url = urljoin(self.config.base_url, link.get('href'))
+                        
+                        # Filter for actual product categories
+                        if (category_name and category_url and len(category_name) > 2 and
+                            any(keyword in category_name.lower() for keyword in known_categories) and
+                            'catalog' in category_url.lower()):
+                            categories[category_name] = category_url
             
             # Filter to only include categories we want to extract
             if self.config.categories_to_extract:
@@ -465,6 +491,34 @@ class WhitecapOnlineExtractor:
                             filtered_categories[name] = url
                             break
                 categories = filtered_categories
+            
+            # If we still don't have enough categories, add some known ones as fallback
+            if len(categories) < 10:
+                known_category_urls = {
+                    "Adhesives, Caulk and Sealants": "https://www.whitecap.com/catalog/Adhesives-Caulk-and-Sealants-en",
+                    "Anchoring and Fasteners": "https://www.whitecap.com/catalog/Anchoring-and-Fasteners-en",
+                    "Brick and Stone": "https://www.whitecap.com/catalog/Brick-and-Stone-en",
+                    "Building Materials": "https://www.whitecap.com/catalog/Building-Materials-en",
+                    "Cleaning Tools and Supplies": "https://www.whitecap.com/catalog/Cleaning-Tools-and-Supplies-en",
+                    "Concrete and Chemicals": "https://www.whitecap.com/catalog/Concrete-and-Chemicals-en",
+                    "Concrete Forming and Accessories": "https://www.whitecap.com/catalog/Concrete-Forming-and-Accessories-en",
+                    "Electrical and Lighting": "https://www.whitecap.com/catalog/Electrical-and-Lighting-en",
+                    "Erosion Control and Geosynthetics": "https://www.whitecap.com/catalog/Erosion-Control-and-Geosynthetics-en",
+                    "Hand Tools": "https://www.whitecap.com/catalog/Hand-Tools-en",
+                    "Jobsite Supplies and Security": "https://www.whitecap.com/catalog/Jobsite-Supplies-and-Security-en",
+                    "Ladders and Scaffolding": "https://www.whitecap.com/catalog/Ladders-and-Scaffolding-en",
+                    "Masonry Block, Pavers, Mortars and Accessories": "https://www.whitecap.com/catalog/Masonry-Block-Pavers-Mortars-and-Accessories-en",
+                    "Material Handling and Storage": "https://www.whitecap.com/catalog/Material-Handling-and-Storage-en",
+                    "Measuring, Marking and Surveying": "https://www.whitecap.com/catalog/Measuring-Marking-and-Surveying-en",
+                    "Power Tool and Equipment Accessories": "https://www.whitecap.com/catalog/Power-Tool-and-Equipment-Accessories-en",
+                    "Power Tools and Equipment": "https://www.whitecap.com/catalog/Power-Tools-and-Equipment-en",
+                    "Safety": "https://www.whitecap.com/catalog/Safety-en",
+                    "Waterproofing": "https://www.whitecap.com/catalog/Waterproofing-en"
+                }
+                
+                for name, url in known_category_urls.items():
+                    if name not in categories:
+                        categories[name] = url
             
             return categories
             
@@ -546,14 +600,21 @@ class WhitecapOnlineExtractor:
         products = []
         
         try:
-            # Find product containers
+            # Find product containers - updated for Whitecap's React structure
             product_selectors = [
                 ".product-item",
                 ".product-listing", 
                 ".item",
                 ".product-card",
                 ".product",
-                "[data-product-id]"
+                "[data-product-id]",
+                "[data-test-selector*='product']",
+                ".GridItemStyle-sc-1uambol",  # From the HTML we saw
+                "div[class*='product']",
+                "div[class*='item']",
+                "div[class*='card']",
+                "article",
+                "section"
             ]
             
             product_elements = []
@@ -596,9 +657,13 @@ class WhitecapOnlineExtractor:
         products = []
         
         try:
-            # Find product containers
-            product_elements = soup.find_all(['div', 'article'], 
-                class_=re.compile(r'product|item|card'))
+            # Find product containers - updated for Whitecap's React structure
+            product_elements = soup.find_all(['div', 'article', 'section'], 
+                class_=re.compile(r'product|item|card|GridItemStyle'))
+            
+            # Also look for elements with data-test-selector containing 'product'
+            test_selector_elements = soup.find_all(attrs={'data-test-selector': re.compile(r'product', re.I)})
+            product_elements.extend(test_selector_elements)
             
             for element in product_elements:
                 try:

@@ -71,12 +71,14 @@ class QuantityUnit(Enum):
 
 
 @dataclass
+@dataclass
 class ExtractedQuantity:
     """Represents an extracted quantity with context"""
     value: float
     unit: str
     context: str
     page_number: int
+    item: str = "Construction Item"  # ADD THIS LINE
     confidence: float = 1.0
     line_number: Optional[int] = None
     term_associated: Optional[str] = None

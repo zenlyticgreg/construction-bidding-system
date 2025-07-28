@@ -64,7 +64,7 @@ def run_extraction():
             max_products_per_category=1000,
             min_confidence_score=0.3,
             rate_limit_delay=2.0,
-            use_selenium=True,
+            use_selenium=True,  # Use Selenium for dynamic content
             headless_browser=True,
             enable_progress_tracking=True,
             save_progress=True
