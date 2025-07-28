@@ -1,5 +1,5 @@
 """
-Application settings and configuration for Caltrans Bidding System.
+Application settings and configuration for PACE - Project Analysis & Construction Estimating.
 """
 
 import os
@@ -16,12 +16,12 @@ DEBUG = ENVIRONMENT == 'development'
 # Database paths
 DATABASE_CONFIG = {
     'development': {
-        'sqlite_path': BASE_DIR / 'data' / 'caltrans_bidding_dev.db',
+        'sqlite_path': BASE_DIR / 'data' / 'pace_construction_dev.db',
         'backup_path': BASE_DIR / 'data' / 'backups',
         'cache_path': BASE_DIR / 'data' / 'cache',
     },
     'production': {
-        'sqlite_path': BASE_DIR / 'data' / 'caltrans_bidding_prod.db',
+        'sqlite_path': BASE_DIR / 'data' / 'pace_construction_prod.db',
         'backup_path': BASE_DIR / 'data' / 'backups',
         'cache_path': BASE_DIR / 'data' / 'cache',
     }
@@ -98,280 +98,435 @@ LOGGING_CONFIG = {
         },
         'simple': {
             'format': '%(levelname)s - %(message)s'
+        },
+        'json': {
+            'format': '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
         }
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'level': 'DEBUG' if DEBUG else 'INFO',
+            'level': 'INFO',
             'formatter': 'simple',
+            'stream': 'ext://sys.stdout'
         },
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'caltrans_bidding.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 5,
-            'level': 'INFO',
+            'level': 'DEBUG',
             'formatter': 'detailed',
+            'filename': BASE_DIR / 'logs' / 'pace_construction.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 5
         },
         'error_file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'errors.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 5,
             'level': 'ERROR',
             'formatter': 'detailed',
+            'filename': BASE_DIR / 'logs' / 'pace_construction_errors.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 5
         }
     },
     'loggers': {
-        'caltrans_bidding': {
+        '': {  # Root logger
+            'level': 'INFO',
             'handlers': ['console', 'file', 'error_file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
+            'propagate': False
         },
-        'src.extractors': {
+        'pace_construction': {
+            'level': 'DEBUG',
             'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
+            'propagate': False
         },
-        'src.analyzers': {
+        'src': {
+            'level': 'DEBUG',
             'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
-        'src.bidding': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
+            'propagate': False
         }
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'WARNING',
     }
 }
 
-# Streamlit configuration
-STREAMLIT_CONFIG = {
-    'page_title': 'Caltrans Bidding System',
-    'page_icon': '🏗️',
+# Application settings
+APP_CONFIG = {
+    'name': 'PACE - Project Analysis & Construction Estimating',
+    'version': '1.0.0',
+    'description': 'Intelligent Construction Estimating Platform',
+    'subtitle': 'Professional-grade estimating for competitive advantage',
+    'company': 'Squires Lumber',
+    'tagline': 'Powered by Squires Lumber',
+    'author': 'PACE Development Team',
+    'contact_email': 'support@pace-construction.com',
+    'website': 'https://pace-construction.com',
+    'page_title': 'PACE - Project Analysis & Construction Estimating',
+    'page_icon': '📊',
     'layout': 'wide',
     'initial_sidebar_state': 'expanded',
-    'theme': {
-        'primaryColor': '#1f77b4',
-        'backgroundColor': '#ffffff',
-        'secondaryBackgroundColor': '#f0f2f6',
-        'textColor': '#262730',
+    'menu_items': {
+        'Get help': 'https://docs.pace-construction.com',
+        'Report a bug': 'https://github.com/your-org/pace-construction-estimating/issues',
+        'About': 'PACE - Intelligent Construction Estimating Platform'
     }
 }
 
-# PDF processing configuration
-PDF_CONFIG = {
-    'extraction_timeout': 300,  # 5 minutes
-    'max_pages_per_document': 1000,
-    'ocr_enabled': True,
-    'ocr_language': 'eng',
-    'table_extraction': True,
-    'image_extraction': False,
-    'text_cleaning': True,
+# Email configuration
+EMAIL_CONFIG = {
+    'smtp_server': os.getenv('SMTP_SERVER', 'smtp.gmail.com'),
+    'smtp_port': int(os.getenv('SMTP_PORT', '587')),
+    'smtp_username': os.getenv('EMAIL_USERNAME', ''),
+    'smtp_password': os.getenv('EMAIL_PASSWORD', ''),
+    'use_tls': True,
+    'default_sender': 'noreply@pace-construction.com',
+    'default_recipients': ['admin@pace-construction.com'],
+    'email_templates': {
+        'catalog_export': {
+            'subject': 'PACE - Catalog Export Complete',
+            'template': 'catalog_export_template.html'
+        },
+        'bid_generated': {
+            'subject': 'PACE - Project Bid Generated',
+            'template': 'bid_generated_template.html'
+        },
+        'analysis_complete': {
+            'subject': 'PACE - Project Analysis Complete',
+            'template': 'analysis_complete_template.html'
+        }
+    }
 }
 
-# Bidding analysis configuration
-BIDDING_CONFIG = {
-    'historical_data_years': 5,  # Years of historical data to analyze
-    'competitor_analysis': True,
-    'market_trend_analysis': True,
-    'risk_assessment': True,
-    'confidence_threshold': 0.75,  # Minimum confidence for recommendations
-    'max_competitors_analyzed': 10,
+# Output paths
+OUTPUT_PATHS = {
+    'catalogs': BASE_DIR / 'output' / 'catalogs',
+    'bids': BASE_DIR / 'output' / 'bids',
+    'reports': BASE_DIR / 'output' / 'reports',
+    'analyses': BASE_DIR / 'output' / 'analyses',
+    'temp': BASE_DIR / 'data' / 'temp',
+    'backups': BASE_DIR / 'data' / 'backups'
 }
 
-# Output configuration
-OUTPUT_CONFIG = {
-    'reports_directory': BASE_DIR / 'output' / 'reports',
-    'bids_directory': BASE_DIR / 'output' / 'bids',
-    'catalogs_directory': BASE_DIR / 'output' / 'catalogs',
-    'export_formats': ['xlsx', 'pdf', 'csv'],
-    'default_export_format': 'xlsx',
-    'include_charts': True,
-    'include_summary': True,
+# Analysis settings
+ANALYSIS_CONFIG = {
+    'max_pages_per_pdf': 1000,
+    'min_confidence_threshold': 0.5,
+    'max_processing_time': 300,  # 5 minutes
+    'batch_size': 10,
+    'supported_languages': ['en'],
+    'terminology_categories': [
+        'formwork',
+        'concrete',
+        'steel',
+        'electrical',
+        'mechanical',
+        'plumbing',
+        'landscaping',
+        'paving',
+        'drainage',
+        'signage'
+    ]
 }
 
-# Security configuration
+# Bid generation settings
+BID_CONFIG = {
+    'default_markup_percentage': 20.0,
+    'default_tax_rate': 8.25,
+    'default_currency': 'USD',
+    'delivery_fee_percentage': 3.0,
+    'delivery_fee_minimum': 150.0,
+    'waste_factors': {
+        'formwork': 0.10,
+        'lumber': 0.10,
+        'hardware': 0.05,
+        'specialty': 0.15,
+        'concrete': 0.05,
+        'steel': 0.03
+    },
+    'bid_templates': {
+        'standard': 'templates/standard_bid_template.xlsx',
+        'detailed': 'templates/detailed_bid_template.xlsx',
+        'summary': 'templates/summary_bid_template.xlsx'
+    },
+    'export_formats': ['xlsx', 'pdf', 'json', 'csv']
+}
+
+# Security settings
 SECURITY_CONFIG = {
     'session_timeout': 3600,  # 1 hour
     'max_login_attempts': 5,
     'password_min_length': 8,
     'require_special_chars': True,
-    'data_encryption': ENVIRONMENT == 'production',
+    'enable_2fa': False,
+    'allowed_file_types': ['.pdf', '.xlsx', '.xls', '.docx', '.doc'],
+    'max_file_size_mb': 100
 }
 
-# Performance configuration
+# Performance settings
 PERFORMANCE_CONFIG = {
-    'max_concurrent_extractions': 3,
-    'cache_enabled': True,
+    'max_concurrent_uploads': 5,
+    'max_concurrent_analyses': 3,
     'cache_ttl': 3600,  # 1 hour
-    'batch_size': 100,
-    'memory_limit': 1024 * 1024 * 1024,  # 1GB
+    'database_pool_size': 10,
+    'enable_caching': True,
+    'enable_compression': True
 }
 
-# Waste factors for different materials
-WASTE_FACTORS = {
-    'concrete': {
-        'structural_concrete': 0.05,      # 5% waste factor
-        'lightweight_concrete': 0.08,     # 8% waste factor
-        'high_performance_concrete': 0.06, # 6% waste factor
-        'fiber_reinforced_concrete': 0.07, # 7% waste factor
+# Feature flags
+FEATURE_FLAGS = {
+    'enable_batch_processing': True,
+    'enable_email_notifications': True,
+    'enable_advanced_analytics': True,
+    'enable_multi_agency_support': True,
+    'enable_caltrans_integration': True,
+    'enable_whitecap_integration': True,
+    'enable_custom_templates': True,
+    'enable_api_access': False
+}
+
+# Agency-specific configurations
+AGENCY_CONFIG = {
+    'caltrans': {
+        'enabled': True,
+        'priority': 'high',
+        'name': 'California Department of Transportation',
+        'abbreviation': 'CalTrans',
+        'terminology_file': 'caltrans_reference.json',
+        'specification_formats': ['pdf', 'docx'],
+        'bid_requirements': {
+            'template_format': 'caltrans_standard',
+            'required_sections': ['cover_sheet', 'bid_form', 'schedule_of_values'],
+            'markup_range': (15.0, 25.0),
+            'delivery_requirements': 'caltrans_approved'
+        },
+        'specific_requirements': ['caltrans_approved', 'california_specs', 'dbe_compliance']
     },
-    'reinforcement': {
-        'rebar': 0.10,                    # 10% waste factor
-        'wire_mesh': 0.05,                # 5% waste factor
-        'post_tensioning': 0.08,          # 8% waste factor
-        'fiber_reinforcement': 0.03,      # 3% waste factor
+    'dot_agencies': {
+        'enabled': True,
+        'priority': 'high',
+        'name': 'State DOT Agencies',
+        'abbreviation': 'DOT',
+        'examples': ['TxDOT', 'FDOT', 'NYSDOT', 'PennDOT'],
+        'terminology_file': 'dot_reference.json',
+        'specification_formats': ['pdf', 'docx'],
+        'bid_requirements': {
+            'template_format': 'dot_standard',
+            'required_sections': ['bid_form', 'schedule_of_values', 'qualifications'],
+            'markup_range': (12.0, 22.0),
+            'delivery_requirements': 'state_approved'
+        },
+        'specific_requirements': ['state_approved', 'dot_specs', 'mbe_wbe_compliance']
     },
-    'formwork': {
-        'plywood': 0.15,                  # 15% waste factor
-        'steel_forms': 0.02,              # 2% waste factor
-        'aluminum_forms': 0.01,           # 1% waste factor
-        'shoring': 0.05,                  # 5% waste factor
+    'municipal': {
+        'enabled': True,
+        'priority': 'medium',
+        'name': 'Municipal Construction',
+        'description': 'City and County Infrastructure Projects',
+        'terminology_file': 'municipal_reference.json',
+        'specification_formats': ['pdf', 'docx'],
+        'bid_requirements': {
+            'template_format': 'municipal_standard',
+            'required_sections': ['bid_form', 'schedule_of_values'],
+            'markup_range': (10.0, 20.0),
+            'delivery_requirements': 'local_approved'
+        },
+        'specific_requirements': ['local_approved', 'municipal_specs', 'local_preferences']
     },
-    'aggregate': {
-        'fine_aggregate': 0.08,           # 8% waste factor
-        'coarse_aggregate': 0.10,         # 10% waste factor
-        'lightweight_aggregate': 0.12,    # 12% waste factor
+    'federal': {
+        'enabled': True,
+        'priority': 'medium',
+        'name': 'Federal Infrastructure',
+        'description': 'Government Construction Projects',
+        'terminology_file': 'federal_reference.json',
+        'specification_formats': ['pdf', 'docx'],
+        'bid_requirements': {
+            'template_format': 'federal_standard',
+            'required_sections': ['sf1442', 'schedule_of_values', 'certifications'],
+            'markup_range': (8.0, 18.0),
+            'delivery_requirements': 'federal_approved'
+        },
+        'specific_requirements': ['federal_approved', 'federal_specs', 'davis_bacon', 'buy_american']
     },
-    'cement': {
-        'type_i': 0.03,                   # 3% waste factor
-        'type_ii': 0.03,                  # 3% waste factor
-        'type_iii': 0.04,                 # 4% waste factor
-        'blended': 0.03,                  # 3% waste factor
+    'commercial': {
+        'enabled': True,
+        'priority': 'medium',
+        'name': 'Commercial Construction',
+        'description': 'Private Sector Development',
+        'terminology_file': 'commercial_reference.json',
+        'specification_formats': ['pdf', 'docx', 'dwg'],
+        'bid_requirements': {
+            'template_format': 'commercial_standard',
+            'required_sections': ['proposal', 'schedule_of_values', 'qualifications'],
+            'markup_range': (15.0, 30.0),
+            'delivery_requirements': 'client_specified'
+        },
+        'specific_requirements': ['client_specs', 'commercial_standards', 'quality_requirements']
+    },
+    'industrial': {
+        'enabled': True,
+        'priority': 'low',
+        'name': 'Industrial Projects',
+        'description': 'Manufacturing and Processing Facilities',
+        'terminology_file': 'industrial_reference.json',
+        'specification_formats': ['pdf', 'docx', 'dwg'],
+        'bid_requirements': {
+            'template_format': 'industrial_standard',
+            'required_sections': ['technical_proposal', 'schedule_of_values', 'safety_plan'],
+            'markup_range': (20.0, 35.0),
+            'delivery_requirements': 'industrial_standards'
+        },
+        'specific_requirements': ['industrial_specs', 'safety_compliance', 'quality_standards']
     }
 }
 
-# Productivity factors for estimating
-PRODUCTIVITY_FACTORS = {
-    'concrete_placement': {
-        'bridge_deck': {
-            'base_rate': 20.0,            # cubic yards per hour
-            'crew_size': 8,
-            'weather_factor': 0.8,        # 20% reduction in bad weather
-            'access_factor': 0.9,         # 10% reduction for difficult access
-            'quality_factor': 0.95,       # 5% reduction for high quality requirements
-        },
-        'bridge_abutment': {
-            'base_rate': 15.0,            # cubic yards per hour
-            'crew_size': 6,
-            'weather_factor': 0.8,
-            'access_factor': 0.85,
-            'quality_factor': 0.95,
-        },
-        'bridge_pier': {
-            'base_rate': 12.0,            # cubic yards per hour
-            'crew_size': 5,
-            'weather_factor': 0.8,
-            'access_factor': 0.9,
-            'quality_factor': 0.95,
-        }
+# Market segments configuration
+MARKET_SEGMENTS = {
+    'dot_highway': {
+        'name': 'DOT & Highway Projects',
+        'description': 'State transportation departments and highway construction',
+        'agencies': ['caltrans', 'dot_agencies'],
+        'examples': ['CalTrans', 'TxDOT', 'FDOT', 'NYSDOT'],
+        'priority': 'high',
+        'icon': '🛣️'
     },
-    'formwork_installation': {
-        'wall_forms': {
-            'base_rate': 100.0,           # square feet per hour
-            'crew_size': 4,
-            'complexity_factor': 0.8,     # 20% reduction for complex forms
-            'height_factor': 0.9,         # 10% reduction for heights over 12ft
-        },
-        'deck_forms': {
-            'base_rate': 80.0,            # square feet per hour
-            'crew_size': 6,
-            'complexity_factor': 0.85,
-            'access_factor': 0.9,
-        },
-        'column_forms': {
-            'base_rate': 20.0,            # linear feet per hour
-            'crew_size': 3,
-            'diameter_factor': 0.9,       # 10% reduction for large diameters
-            'height_factor': 0.85,
-        }
+    'municipal': {
+        'name': 'Municipal Construction',
+        'description': 'City and county infrastructure projects',
+        'agencies': ['municipal'],
+        'examples': ['Water treatment', 'Roads', 'Public buildings'],
+        'priority': 'medium',
+        'icon': '🏛️'
     },
-    'reinforcement_installation': {
-        'bridge_deck': {
-            'base_rate': 500.0,           # pounds per hour
-            'crew_size': 4,
-            'spacing_factor': 0.9,        # 10% reduction for tight spacing
-            'complexity_factor': 0.85,
-        },
-        'bridge_abutment': {
-            'base_rate': 300.0,           # pounds per hour
-            'crew_size': 3,
-            'spacing_factor': 0.9,
-            'access_factor': 0.85,
-        },
-        'bridge_pier': {
-            'base_rate': 200.0,           # pounds per hour
-            'crew_size': 2,
-            'spacing_factor': 0.9,
-            'access_factor': 0.8,
-        }
+    'federal': {
+        'name': 'Federal Infrastructure',
+        'description': 'Government construction projects',
+        'agencies': ['federal'],
+        'examples': ['Courthouses', 'Military facilities', 'Federal buildings'],
+        'priority': 'medium',
+        'icon': '🏛️'
     },
-    'general_factors': {
-        'overtime_multiplier': 1.5,       # 50% additional for overtime
-        'night_work_multiplier': 1.3,     # 30% additional for night work
-        'weekend_multiplier': 1.4,        # 40% additional for weekend work
-        'holiday_multiplier': 2.0,        # 100% additional for holidays
-        'learning_curve_factor': 0.9,     # 10% improvement after first week
-        'experience_factor': 1.1,         # 10% improvement for experienced crews
+    'commercial': {
+        'name': 'Commercial Construction',
+        'description': 'Private sector development projects',
+        'agencies': ['commercial'],
+        'examples': ['Office complexes', 'Retail centers', 'Hotels'],
+        'priority': 'medium',
+        'icon': '🏢'
+    },
+    'industrial': {
+        'name': 'Industrial Projects',
+        'description': 'Manufacturing and processing facilities',
+        'agencies': ['industrial'],
+        'examples': ['Factories', 'Warehouses', 'Refineries'],
+        'priority': 'low',
+        'icon': '🏭'
     }
 }
 
-# Development-specific settings
-if DEBUG:
-    # Override settings for development
-    PDF_CONFIG['extraction_timeout'] = 600  # 10 minutes for development
-    PERFORMANCE_CONFIG['max_concurrent_extractions'] = 1  # Single extraction for development
+# Success metrics configuration
+SUCCESS_METRICS = {
+    'competitive_advantage': {
+        'name': 'Competitive Advantage',
+        'description': 'Advanced bidding strategies for construction projects',
+        'icon': '🏆',
+        'color': 'success',
+        'target': 'Higher win rates',
+        'measurement': 'Win rate improvement'
+    },
+    'multi_agency_support': {
+        'name': 'Multi-Agency Support',
+        'description': 'DOT, municipal, federal, and commercial projects',
+        'icon': '🏛️',
+        'color': 'primary',
+        'target': 'Broader market access',
+        'measurement': 'Agencies supported'
+    },
+    'professional_estimating': {
+        'name': 'Professional Estimating',
+        'description': 'Industry-leading accuracy for all project types',
+        'icon': '📊',
+        'color': 'error',
+        'target': 'Reduced errors',
+        'measurement': 'Accuracy rate'
+    }
+}
 
-# Production-specific settings
-if ENVIRONMENT == 'production':
-    # Stricter settings for production
-    SECURITY_CONFIG['session_timeout'] = 1800  # 30 minutes
-    SECURITY_CONFIG['max_login_attempts'] = 3
-    PERFORMANCE_CONFIG['cache_ttl'] = 7200  # 2 hours
+# Professional language and messaging
+PROFESSIONAL_MESSAGING = {
+    'headlines': [
+        'PACE supports all major construction project types',
+        'From highway infrastructure to commercial builds',
+        'Professional-grade estimating for competitive advantage'
+    ],
+    'benefits': [
+        'Advanced bidding strategies for construction projects',
+        'Multi-agency project support across all major segments',
+        'Professional estimating for all project types'
+    ],
+    'value_propositions': [
+        'Streamline infrastructure and construction project bidding',
+        'Automate catalog processing and bid generation',
+        'Generate accurate cost estimates with built-in calculations'
+    ]
+}
+
+# Default application settings
+DEFAULT_SETTINGS = {
+    'markup_percentage': 20.0,
+    'tax_rate': 8.25,
+    'delivery_fee_percentage': 3.0,
+    'delivery_fee_minimum': 150.0,
+    'waste_factors': {
+        'formwork': 0.10,
+        'lumber': 0.10,
+        'hardware': 0.05,
+        'specialty': 0.15
+    },
+    'currency': 'USD',
+    'language': 'en',
+    'timezone': 'America/Los_Angeles',
+    'date_format': '%Y-%m-%d',
+    'time_format': '%H:%M:%S'
+}
 
 def get_setting(key: str, default: Any = None) -> Any:
-    """Get a setting value with fallback to default."""
-    # Flatten all config dictionaries for easy access
-    all_settings = {
-        **globals(),
-        **DB_CONFIG,
-        **MARKUP_PERCENTAGES,
-        **DELIVERY_FEE_CONFIG,
-        **FILE_UPLOAD_CONFIG,
-        **STREAMLIT_CONFIG,
-        **PDF_CONFIG,
-        **BIDDING_CONFIG,
-        **OUTPUT_CONFIG,
-        **SECURITY_CONFIG,
-        **PERFORMANCE_CONFIG,
-        **WASTE_FACTORS,
-        **PRODUCTIVITY_FACTORS,
-    }
-    return all_settings.get(key, default)
+    """
+    Get a setting value by key.
+    
+    Args:
+        key: The setting key to retrieve
+        default: Default value if key not found
+        
+    Returns:
+        The setting value or default
+    """
+    # Check in environment variables first
+    env_value = os.getenv(key.upper())
+    if env_value is not None:
+        return env_value
+    
+    # Check in default settings
+    if key in DEFAULT_SETTINGS:
+        return DEFAULT_SETTINGS[key]
+    
+    # Check in app config
+    if key in APP_CONFIG:
+        return APP_CONFIG[key]
+    
+    return default
 
 def ensure_directories():
     """Ensure all required directories exist."""
     directories = [
-        BASE_DIR / 'data',
         BASE_DIR / 'data' / 'uploads',
         BASE_DIR / 'data' / 'temp',
         BASE_DIR / 'data' / 'backups',
         BASE_DIR / 'data' / 'cache',
         BASE_DIR / 'logs',
-        BASE_DIR / 'output' / 'reports',
-        BASE_DIR / 'output' / 'bids',
         BASE_DIR / 'output' / 'catalogs',
+        BASE_DIR / 'output' / 'bids',
+        BASE_DIR / 'output' / 'reports',
+        BASE_DIR / 'output' / 'analyses'
     ]
     
     for directory in directories:
         directory.mkdir(parents=True, exist_ok=True)
-
-# Ensure directories exist when module is imported
-ensure_directories() 
+    
+    return directories 

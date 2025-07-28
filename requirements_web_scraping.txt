@@ -1,0 +1,14 @@
+# Web scraping dependencies for Whitecap online catalog extractor
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+selenium>=4.0.0
+lxml>=4.9.0
+webdriver-manager>=3.8.0
+
+# Data processing
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Additional utilities
+fake-useragent>=1.1.0
+retrying>=1.3.0 

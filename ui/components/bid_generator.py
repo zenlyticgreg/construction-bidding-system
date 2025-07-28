@@ -1,8 +1,19 @@
 """
-Bid Generator Components for CalTrans Bidding System
+Bid Generator Components for PACE - Project Analysis & Construction Estimating
 
-This module provides Streamlit components for bid generation, configuration,
-line item management, pricing summaries, and file downloads.
+This module provides bid generation and management components for the PACE
+construction bidding automation platform, supporting multiple agencies and
+project types.
+
+The bid generator components support:
+- Automated bid generation from analysis results
+- Multi-agency bid format support
+- Pricing calculations and adjustments
+- Professional bid templates
+- Export and delivery capabilities
+- Bid history and comparison tools
+
+For more information, visit: https://pace-construction.com
 """
 
 import streamlit as st

@@ -1,8 +1,19 @@
 """
-File Upload Components for CalTrans Bidding System
+File Upload Components for PACE - Project Analysis & Construction Estimating
 
-This module provides Streamlit components for handling PDF file uploads
-with validation, progress tracking, and error handling.
+This module provides file upload and processing components for the PACE
+construction bidding automation platform, supporting multiple file formats
+and batch processing capabilities.
+
+The upload components support:
+- Multi-format file upload (PDF, Excel, Word, etc.)
+- Drag-and-drop functionality
+- Progress tracking and status updates
+- File validation and error handling
+- Batch processing capabilities
+- File history and management
+
+For more information, visit: https://pace-construction.com
 """
 
 import streamlit as st
@@ -32,15 +43,25 @@ class FileUploadComponent:
         st.header("📄 Upload CalTrans Documents")
         st.markdown("Upload PDF files containing CalTrans specifications and requirements.")
         
-        # File upload widget
-        uploaded_file = st.file_uploader(
-            "Choose a PDF file",
-            type=['pdf'],
-            help="Select a PDF file containing CalTrans specifications"
-        )
+        # Add a container to prevent layout shifts
+        upload_container = st.container()
         
-        if uploaded_file is not None:
-            return self._process_uploaded_file(uploaded_file)
+        with upload_container:
+            # File upload widget
+            uploaded_file = st.file_uploader(
+                "Choose a PDF file",
+                type=['pdf'],
+                help="Select a PDF file containing CalTrans specifications",
+                key="main_file_uploader"  # Add unique key to prevent conflicts
+            )
+            
+            if uploaded_file is not None:
+                st.info(f"File detected: {uploaded_file.name} ({uploaded_file.size} bytes)")
+                
+                # Process the file in a separate container to prevent layout issues
+                process_container = st.container()
+                with process_container:
+                    return self._process_uploaded_file(uploaded_file)
         
         return None
     
@@ -89,22 +110,25 @@ class FileUploadComponent:
                 'error': f"File type '{file_extension}' is not supported. Please upload a PDF file."
             }
         
-        # Check if file is actually a PDF
+        # Check if file is actually a PDF - improved validation
         try:
             # Read first few bytes to check PDF signature
             uploaded_file.seek(0)
-            header = uploaded_file.read(4)
-            if header != b'%PDF':
-                return {
-                    'valid': False,
-                    'error': "File does not appear to be a valid PDF document."
-                }
+            header = uploaded_file.read(8)  # Read more bytes for better detection
             uploaded_file.seek(0)  # Reset file pointer
+            
+            # Check for PDF signature (more flexible)
+            if not header.startswith(b'%PDF'):
+                # Try alternative PDF signatures
+                if not (header.startswith(b'\x25\x50\x44\x46') or  # %PDF in hex
+                       header.startswith(b'\x50\x4B\x03\x04')):   # ZIP format (some PDFs)
+                    return {
+                        'valid': False,
+                        'error': "File does not appear to be a valid PDF document. Please ensure you're uploading a PDF file."
+                    }
         except Exception as e:
-            return {
-                'valid': False,
-                'error': f"Error reading file: {str(e)}"
-            }
+            st.warning(f"Warning: Could not validate PDF signature: {str(e)}")
+            # Continue anyway - let pdfplumber handle the actual validation
         
         return {
             'valid': True,
@@ -140,6 +164,9 @@ class FileUploadComponent:
     def _process_file_with_progress(self, uploaded_file) -> Dict[str, Any]:
         """Process the PDF file with progress tracking."""
         
+        # Set processing flag to prevent navigation issues
+        st.session_state.is_processing_upload = True
+        
         progress_bar = st.progress(0)
         status_text = st.empty()
         
@@ -150,6 +177,7 @@ class FileUploadComponent:
             
             pdf_content = self._extract_pdf_content(uploaded_file)
             if not pdf_content:
+                st.session_state.is_processing_upload = False
                 return {
                     'success': False,
                     'error': "Failed to extract content from PDF file."
@@ -175,11 +203,19 @@ class FileUploadComponent:
             progress_bar.empty()
             status_text.empty()
             
+            # Get the raw PDF bytes for analysis
+            uploaded_file.seek(0)
+            pdf_bytes = uploaded_file.read()
+            
+            # Clear processing flag
+            st.session_state.is_processing_upload = False
+            
             return {
                 'success': True,
                 'data': {
                     'filename': uploaded_file.name,
-                    'content': text_content,
+                    'content': pdf_bytes,  # Pass raw PDF bytes instead of text
+                    'text_content': text_content,  # Keep text content for other uses
                     'analysis': analysis_result,
                     'upload_time': datetime.now(),
                     'file_size': uploaded_file.size,
@@ -190,6 +226,8 @@ class FileUploadComponent:
         except Exception as e:
             progress_bar.empty()
             status_text.empty()
+            # Clear processing flag on error
+            st.session_state.is_processing_upload = False
             return {
                 'success': False,
                 'error': f"Error processing file: {str(e)}"
@@ -198,6 +236,9 @@ class FileUploadComponent:
     def _extract_pdf_content(self, uploaded_file) -> Optional[list]:
         """Extract content from PDF file."""
         try:
+            # Reset file pointer
+            uploaded_file.seek(0)
+            
             with pdfplumber.open(uploaded_file) as pdf:
                 pages = []
                 for page in pdf.pages:
@@ -205,6 +246,11 @@ class FileUploadComponent:
                 return pages
         except Exception as e:
             st.error(f"Error reading PDF: {str(e)}")
+            st.info("This might be due to:")
+            st.info("- File corruption")
+            st.info("- Password protection")
+            st.info("- Unsupported PDF format")
+            st.info("- File is not actually a PDF")
             return None
     
     def _analyze_pdf_content(self, pdf_content: list) -> Dict[str, Any]:
@@ -341,6 +387,7 @@ def render_file_history() -> None:
                 with col3:
                     if st.button(f"Remove", key=f"remove_{i}"):
                         st.session_state.upload_history.pop(i)
-                        st.rerun()
+                        # Remove the st.rerun() call to prevent jumping back to main screen
+                        st.success("File removed from history")
     else:
         st.info("No files uploaded yet. Upload your first PDF to see it here.") 

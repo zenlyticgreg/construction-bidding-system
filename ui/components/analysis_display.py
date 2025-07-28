@@ -1,8 +1,19 @@
 """
-Analysis Display Components for CalTrans Bidding System
+Analysis Display Components for PACE - Project Analysis & Construction Estimating
 
-This module provides Streamlit components for displaying CalTrans analysis results,
-terminology findings, quantity extractions, and interactive visualizations.
+This module provides analysis display and visualization components for the PACE
+construction bidding automation platform, supporting multiple agencies and
+project types.
+
+The display components support:
+- Project analysis result visualization
+- Terminology and quantity display
+- Alert and warning management
+- Interactive charts and graphs
+- Export and reporting capabilities
+- Multi-agency format support
+
+For more information, visit: https://pace-construction.com
 """
 
 import streamlit as st

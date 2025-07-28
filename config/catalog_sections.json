@@ -1,531 +1,103 @@
 {
   "metadata": {
+    "name": "Whitecap Catalog Sections Configuration",
     "version": "1.0.0",
-    "last_updated": "2024-01-15",
-    "description": "Whitecap catalog structure for CalTrans bidding system",
-    "source": "Whitecap Construction Supply Catalog",
-    "total_pages": 826
+    "description": "Whitecap catalog structure for PACE construction bidding automation platform",
+    "author": "PACE Development Team",
+    "created": "2024-01-15",
+    "updated": "2024-01-15"
   },
   "catalog_sections": {
-    "safety_equipment": {
-      "page_range": {
-        "start": 3,
-        "end": 182,
-        "total_pages": 180
-      },
-      "priority": "low",
-      "priority_level": 4,
-      "description": "Personal protective equipment and safety gear",
-      "categories": [
-        "hard_hats",
-        "safety_glasses",
-        "work_gloves",
-        "safety_vests",
-        "fall_protection",
-        "respiratory_protection",
-        "hearing_protection",
-        "foot_protection"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.7,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": false
-      },
-      "keywords": [
-        "safety",
-        "protection",
-        "ppe",
-        "hard hat",
-        "gloves",
-        "vest",
-        "glasses",
-        "boots"
-      ]
-    },
-    "power_tools": {
-      "page_range": {
-        "start": 183,
-        "end": 320,
-        "total_pages": 138
-      },
-      "priority": "medium",
-      "priority_level": 3,
-      "description": "Electric and pneumatic power tools",
-      "categories": [
-        "drills",
-        "saws",
-        "grinders",
-        "hammers",
-        "compressors",
-        "generators",
-        "welding_equipment",
-        "concrete_tools"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.8,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": true
-      },
-      "keywords": [
-        "power tool",
-        "electric",
-        "pneumatic",
-        "drill",
-        "saw",
-        "grinder",
-        "hammer",
-        "compressor"
-      ]
-    },
-    "measuring_marking": {
-      "page_range": {
-        "start": 321,
-        "end": 346,
-        "total_pages": 26
-      },
-      "priority": "medium",
-      "priority_level": 3,
-      "description": "Measuring and marking tools",
-      "categories": [
-        "tape_measures",
-        "levels",
-        "lasers",
-        "marking_tools",
-        "surveying_equipment",
-        "calipers",
-        "rulers"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.8,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": false
-      },
-      "keywords": [
-        "measure",
-        "level",
-        "laser",
-        "mark",
-        "survey",
-        "tape",
-        "ruler"
-      ]
-    },
-    "hand_tools": {
-      "page_range": {
-        "start": 347,
-        "end": 404,
-        "total_pages": 58
-      },
-      "priority": "medium",
-      "priority_level": 3,
-      "description": "Manual hand tools",
-      "categories": [
-        "hammers",
-        "screwdrivers",
-        "wrenches",
-        "pliers",
-        "chisels",
-        "files",
-        "clamps",
-        "cutting_tools"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.8,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": false
-      },
-      "keywords": [
-        "hand tool",
-        "hammer",
-        "screwdriver",
-        "wrench",
-        "plier",
-        "chisel",
-        "file",
-        "clamp"
-      ]
-    },
-    "jobsite_supplies": {
-      "page_range": {
-        "start": 405,
-        "end": 460,
-        "total_pages": 56
-      },
-      "priority": "medium",
-      "priority_level": 3,
-      "description": "General jobsite supplies and consumables",
-      "categories": [
-        "adhesives",
-        "caulking",
-        "sealants",
-        "cleaners",
-        "lubricants",
-        "tapes",
-        "wraps",
-        "chemicals"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.7,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": false
-      },
-      "keywords": [
-        "supply",
-        "adhesive",
-        "caulk",
-        "sealant",
-        "cleaner",
-        "lubricant",
-        "tape",
-        "chemical"
-      ]
+    "concrete_forming": {
+      "start_page": 1,
+      "end_page": 50,
+      "priority": "high",
+      "description": "Concrete forming and shoring systems",
+      "categories": ["formwork", "shoring", "concrete"],
+      "keywords": ["form", "shoring", "concrete", "forming"]
     },
     "fastening_systems": {
-      "page_range": {
-        "start": 461,
-        "end": 516,
-        "total_pages": 56
-      },
-      "priority": "high",
-      "priority_level": 2,
-      "description": "Fasteners, anchors, and connection systems",
-      "categories": [
-        "nails",
-        "screws",
-        "bolts",
-        "anchors",
-        "connectors",
-        "hangers",
-        "ties",
-        "clips"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.9,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": true
-      },
-      "keywords": [
-        "fastener",
-        "nail",
-        "screw",
-        "bolt",
-        "anchor",
-        "connector",
-        "hanger",
-        "tie"
-      ]
-    },
-    "concrete_forming": {
-      "page_range": {
-        "start": 517,
-        "end": 608,
-        "total_pages": 92
-      },
-      "priority": "critical",
-      "priority_level": 1,
-      "description": "Concrete formwork systems and accessories",
-      "categories": [
-        "form_panels",
-        "form_accessories",
-        "shoring_systems",
-        "form_ties",
-        "form_liners",
-        "form_release",
-        "edge_forms",
-        "column_forms"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.95,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": true,
-        "priority_processing": true
-      },
-      "keywords": [
-        "form",
-        "forming",
-        "formwork",
-        "shoring",
-        "tie",
-        "panel",
-        "liner",
-        "release"
-      ],
-      "caltrans_mapping": {
-        "FORM_FACING": ["form_panels", "form_liners"],
-        "FALSEWORK": ["shoring_systems"],
-        "WALING": ["form_accessories"],
-        "BLOCKOUT": ["form_accessories"]
-      }
-    },
-    "masonry": {
-      "page_range": {
-        "start": 609,
-        "end": 632,
-        "total_pages": 24
-      },
+      "start_page": 51,
+      "end_page": 100,
       "priority": "medium",
-      "priority_level": 3,
-      "description": "Masonry tools and supplies",
-      "categories": [
-        "brick_tools",
-        "mortar_mixes",
-        "grout",
-        "masonry_accessories",
-        "pointing_tools",
-        "cleaning_supplies"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.8,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": false
-      },
-      "keywords": [
-        "masonry",
-        "brick",
-        "mortar",
-        "grout",
-        "pointing",
-        "trowel"
-      ]
+      "description": "Fastening and anchoring systems",
+      "categories": ["fasteners", "anchors", "hardware"],
+      "keywords": ["fastener", "anchor", "bolt", "screw", "hardware"]
     },
-    "building_envelope": {
-      "page_range": {
-        "start": 633,
-        "end": 692,
-        "total_pages": 60
-      },
-      "priority": "low",
-      "priority_level": 4,
-      "description": "Building envelope materials and systems",
-      "categories": [
-        "insulation",
-        "vapor_barriers",
-        "air_barriers",
-        "weather_barriers",
-        "flashing",
-        "sealants"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.7,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": false
-      },
-      "keywords": [
-        "envelope",
-        "insulation",
-        "barrier",
-        "flashing",
-        "sealant",
-        "weather"
-      ]
-    },
-    "decorative_concrete": {
-      "page_range": {
-        "start": 693,
-        "end": 784,
-        "total_pages": 92
-      },
+    "safety_equipment": {
+      "start_page": 101,
+      "end_page": 150,
       "priority": "high",
-      "priority_level": 2,
-      "description": "Decorative concrete products and finishes",
-      "categories": [
-        "stamps",
-        "stains",
-        "overlays",
-        "textures",
-        "colors",
-        "sealers",
-        "polishing",
-        "decorative_accessories"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.9,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": true
-      },
-      "keywords": [
-        "decorative",
-        "stamp",
-        "stain",
-        "overlay",
-        "texture",
-        "color",
-        "sealer",
-        "polish"
-      ],
-      "caltrans_mapping": {
-        "STAMPED_CONCRETE": ["stamps", "textures"],
-        "FRACTURED_RIB_TEXTURE": ["textures", "overlays"]
-      }
+      "description": "Safety equipment and fall protection",
+      "categories": ["safety", "fall_protection", "ppe"],
+      "keywords": ["safety", "fall", "protection", "harness", "guardrail"]
     },
-    "pipes_drainage": {
-      "page_range": {
-        "start": 785,
-        "end": 798,
-        "total_pages": 14
-      },
-      "priority": "high",
-      "priority_level": 2,
-      "description": "Drainage pipes and systems",
-      "categories": [
-        "drain_pipes",
-        "catch_basins",
-        "drainage_accessories",
-        "pipe_fittings",
-        "drainage_fabric"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.9,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": true
-      },
-      "keywords": [
-        "drain",
-        "pipe",
-        "basin",
-        "fitting",
-        "fabric"
-      ]
-    },
-    "geosynthetics": {
-      "page_range": {
-        "start": 799,
-        "end": 826,
-        "total_pages": 28
-      },
+    "tools_and_equipment": {
+      "start_page": 151,
+      "end_page": 200,
       "priority": "medium",
-      "priority_level": 3,
-      "description": "Geosynthetic materials and erosion control",
-      "categories": [
-        "geotextiles",
-        "geogrids",
-        "erosion_control",
-        "retention_systems",
-        "drainage_geocomposites"
-      ],
-      "extraction_settings": {
-        "enabled": true,
-        "fuzzy_match_threshold": 0.8,
-        "quantity_extraction": true,
-        "price_extraction": true,
-        "image_extraction": false
-      },
-      "keywords": [
-        "geosynthetic",
-        "geotextile",
-        "geogrid",
-        "erosion",
-        "retention",
-        "drainage"
-      ],
-      "caltrans_mapping": {
-        "EROSION_CONTROL": ["erosion_control", "geotextiles"]
-      }
+      "description": "Hand tools and construction equipment",
+      "categories": ["tools", "equipment", "hand_tools"],
+      "keywords": ["tool", "equipment", "hand", "power", "construction"]
+    },
+    "materials_and_supplies": {
+      "start_page": 201,
+      "end_page": 250,
+      "priority": "medium",
+      "description": "Construction materials and supplies",
+      "categories": ["materials", "supplies", "consumables"],
+      "keywords": ["material", "supply", "consumable", "construction"]
     }
   },
-  "extraction_priorities": {
-    "critical": {
-      "priority_level": 1,
-      "sections": ["concrete_forming"],
-      "processing_order": 1,
-      "fuzzy_match_threshold": 0.95,
-      "image_extraction": true,
-      "priority_processing": true,
-      "alert_on_missing": true
+  "extraction_settings": {
+    "table_detection": {
+      "enabled": true,
+      "min_rows": 3,
+      "min_cols": 2,
+      "confidence_threshold": 0.7
     },
-    "high": {
-      "priority_level": 2,
-      "sections": ["fastening_systems", "decorative_concrete", "pipes_drainage"],
-      "processing_order": 2,
-      "fuzzy_match_threshold": 0.9,
-      "image_extraction": true,
-      "priority_processing": false,
-      "alert_on_missing": true
+    "text_extraction": {
+      "enabled": true,
+      "ocr_enabled": false,
+      "min_confidence": 0.8
     },
-    "medium": {
-      "priority_level": 3,
-      "sections": [
-        "power_tools",
-        "measuring_marking",
-        "hand_tools",
-        "jobsite_supplies",
-        "masonry",
-        "geosynthetics"
-      ],
-      "processing_order": 3,
-      "fuzzy_match_threshold": 0.8,
-      "image_extraction": false,
-      "priority_processing": false,
-      "alert_on_missing": false
+    "product_identification": {
+      "enabled": true,
+      "required_fields": ["description", "part_number", "price"],
+      "optional_fields": ["category", "specifications", "notes"]
     },
-    "low": {
-      "priority_level": 4,
-      "sections": ["safety_equipment", "building_envelope"],
-      "processing_order": 4,
-      "fuzzy_match_threshold": 0.7,
-      "image_extraction": false,
-      "priority_processing": false,
-      "alert_on_missing": false
+    "data_cleaning": {
+      "enabled": true,
+      "remove_duplicates": true,
+      "standardize_units": true,
+      "validate_prices": true
     }
   },
-  "processing_configuration": {
-    "batch_processing": {
-      "critical_batch_size": 10,
-      "high_batch_size": 25,
-      "medium_batch_size": 50,
-      "low_batch_size": 100
+  "agency_support": {
+    "caltrans": {
+      "enabled": true,
+      "priority": "high",
+      "specific_requirements": ["caltrans_approved", "california_specs"]
     },
-    "timeout_settings": {
-      "critical_timeout": 300,
-      "high_timeout": 180,
-      "medium_timeout": 120,
-      "low_timeout": 60
+    "dot_agencies": {
+      "enabled": true,
+      "priority": "high",
+      "specific_requirements": ["dot_approved", "state_specs"]
     },
-    "retry_settings": {
-      "critical_retries": 3,
-      "high_retries": 2,
-      "medium_retries": 1,
-      "low_retries": 0
+    "municipal": {
+      "enabled": true,
+      "priority": "medium",
+      "specific_requirements": ["municipal_approved", "local_specs"]
+    },
+    "federal": {
+      "enabled": true,
+      "priority": "medium",
+      "specific_requirements": ["federal_approved", "federal_specs"]
+    },
+    "commercial": {
+      "enabled": true,
+      "priority": "medium",
+      "specific_requirements": ["commercial_grade", "industry_standards"]
     }
-  },
-  "caltrans_integration": {
-    "mapped_sections": {
-      "concrete_forming": {
-        "caltrans_terms": ["FORM_FACING", "FALSEWORK", "WALING", "BLOCKOUT"],
-        "extraction_priority": "critical"
-      },
-      "decorative_concrete": {
-        "caltrans_terms": ["STAMPED_CONCRETE", "FRACTURED_RIB_TEXTURE"],
-        "extraction_priority": "high"
-      },
-      "geosynthetics": {
-        "caltrans_terms": ["EROSION_CONTROL"],
-        "extraction_priority": "medium"
-      }
-    },
-    "cross_reference_enabled": true,
-    "automatic_mapping": true
   }
 } 

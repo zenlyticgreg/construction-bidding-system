@@ -1,13 +1,18 @@
 """
-Data Validation Utilities for CalTrans Bidding System
+Data Validation Utilities for PACE - Project Analysis & Construction Estimating
 
-This module provides comprehensive validation functions for:
-- PDF file uploads and processing
-- Data quality assessment
-- CalTrans terminology validation
-- Error handling and logging
-- File cleanup utilities
-- Progress tracking
+This module provides comprehensive data validation capabilities for the PACE
+construction bidding automation platform, ensuring data quality and integrity
+across all system components.
+
+The validator supports:
+- Catalog data validation
+- Project specification validation
+- Bid data validation
+- Cross-reference validation
+- Data quality reporting
+
+For more information, visit: https://pace-construction.com
 """
 
 import os
@@ -119,7 +124,7 @@ class DataValidator:
     def __init__(self, logger: Optional[logging.Logger] = None):
         """Initialize the data validator"""
         self.logger = logger or self._setup_logger()
-        self.settings = get_setting()
+        self.settings = get_setting('DATA_VALIDATOR_CONFIG', {})  # Fix: provide key parameter
         self.temp_dir = Path(tempfile.gettempdir()) / "caltrans_bidding"
         self.temp_dir.mkdir(exist_ok=True)
         

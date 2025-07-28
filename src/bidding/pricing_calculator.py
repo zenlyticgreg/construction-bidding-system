@@ -1,13 +1,19 @@
 """
-Pricing Calculator for CalTrans Bidding System
+Pricing Calculator for PACE - Project Analysis & Construction Estimating
 
-This module provides comprehensive pricing calculations including:
-- Base pricing calculations with product matching
-- Volume discounts and rush order fees
-- Regional pricing adjustments
-- Delivery optimization and cost calculation
-- Pricing history tracking and trend analysis
-- Lumber quantity estimation from CalTrans analysis
+This module provides comprehensive pricing calculation capabilities for the PACE
+construction bidding automation platform, supporting multiple agencies and
+project types.
+
+The calculator supports:
+- Multi-agency pricing models
+- Markup calculations and adjustments
+- Tax and delivery fee calculations
+- Waste factor adjustments
+- Lumber quantity estimation from project analysis
+- Cost optimization and competitive pricing
+
+For more information, visit: https://pace-construction.com
 """
 
 import os

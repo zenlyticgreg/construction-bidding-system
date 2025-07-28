@@ -1,9 +1,19 @@
 """
-Product Matcher for CalTrans Bidding System
+Product Matcher for PACE - Project Analysis & Construction Estimating
 
-This module provides intelligent product matching between CalTrans project requirements
-and Whitecap catalog products, including fuzzy matching, pricing estimation, and
-alternative product suggestions.
+This module provides intelligent product matching capabilities for the PACE
+construction bidding automation platform, supporting multiple agencies and
+catalog formats.
+
+The matcher supports:
+- Multi-agency terminology matching
+- Fuzzy string matching algorithms
+- Product categorization and classification
+- Confidence scoring and ranking
+- Cross-reference validation
+- Custom matching rules and preferences
+
+For more information, visit: https://pace-construction.com
 """
 
 import re

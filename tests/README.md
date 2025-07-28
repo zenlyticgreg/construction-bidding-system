@@ -1,325 +1,92 @@
-# CalTrans Bidding System - Test Suite
+# PACE - Project Analysis & Construction Estimating - Test Suite
 
-This directory contains comprehensive unit tests for the CalTrans Bidding System, covering all major components and functionality.
+This directory contains comprehensive unit tests for the PACE construction bidding automation platform, covering all major components and functionality.
 
-## 📋 Test Structure
+## 📁 Test Structure
 
-### Test Files
-
-- **`test_extractor.py`** - Tests for `WhitecapCatalogExtractor`
-  - PDF processing capabilities
-  - Product categorization
-  - Data validation
-  - Error handling
-  - Performance metrics
-
-- **`test_analyzer.py`** - Tests for `CalTransPDFAnalyzer`
-  - CalTrans terminology detection
-  - Quantity extraction accuracy
-  - Cross-reference functionality
-  - Alert generation
-  - Edge cases and error handling
-
-- **`test_bidding.py`** - Tests for bidding system
-  - Bid generation workflow
-  - Pricing calculations
-  - Product matching accuracy
-  - Excel output validation
-  - Performance testing
-
-- **`conftest.py`** - Shared fixtures and configuration
-  - Common test data
-  - Mock objects
-  - Utility functions
-  - Pytest configuration
-
-### Test Categories
-
-Tests are categorized using pytest markers:
-
-- **`@pytest.mark.unit`** - Unit tests (fast, isolated)
-- **`@pytest.mark.integration`** - Integration tests (component interaction)
-- **`@pytest.mark.performance`** - Performance tests (timing, memory)
-- **`@pytest.mark.slow`** - Slow tests (long-running operations)
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-1. Install test dependencies:
-```bash
-pip install -r requirements.txt
+```
+tests/
+├── conftest.py              # Pytest configuration and shared fixtures
+├── test_analyzer.py         # Analyzer component tests
+├── test_bid_engine.py       # Bid engine tests
+├── test_bidding.py          # Bidding system tests
+├── test_caltrans_analyzer.py # CalTrans-specific analyzer tests
+├── test_extractor.py        # Extractor component tests
+├── test_product_matcher.py  # Product matcher tests
+├── test_ui_components.py    # UI component tests
+└── README.md               # This file
 ```
 
-2. Install pytest and testing tools:
-```bash
-pip install pytest pytest-cov pytest-xdist pytest-mock
-```
+## 🧪 Test Categories
 
-### Running Tests
+### Unit Tests
+- **Component Tests**: Individual component functionality
+- **Utility Tests**: Helper function and utility testing
+- **Data Structure Tests**: Data model and validation testing
 
-#### Using the Test Runner (Recommended)
+### Integration Tests
+- **Workflow Tests**: End-to-end process testing
+- **Component Interaction Tests**: Cross-component communication
+- **Data Flow Tests**: Data processing pipeline testing
 
+### Functional Tests
+- **Feature Tests**: Complete feature functionality
+- **User Scenario Tests**: Real-world usage scenarios
+- **Performance Tests**: System performance and load testing
+
+## 🚀 Running Tests
+
+### Quick Start
 ```bash
 # Run all tests
-python run_tests.py --all
+python run_tests.py
 
-# Run specific test types
-python run_tests.py --unit
-python run_tests.py --integration
-python run_tests.py --performance
-
-# Run specific components
-python run_tests.py --extractor
-python run_tests.py --analyzer
-python run_tests.py --bidding
+# Run with verbose output
+python run_tests.py --verbose
 
 # Run with coverage
 python run_tests.py --coverage
 
-# Run in parallel
+# Run tests in parallel
 python run_tests.py --parallel
-
-# Check test environment
-python run_tests.py --check-env
 ```
 
-#### Using pytest directly
-
+### Specific Test Categories
 ```bash
-# Run all tests
-pytest tests/ -v
+# Unit tests only
+python run_tests.py --unit
 
+# Integration tests only
+python run_tests.py --integration
+
+# Functional tests only
+python run_tests.py --functional
+
+# Performance tests only
+python run_tests.py --performance
+```
+
+### Individual Test Files
+```bash
 # Run specific test file
-pytest tests/test_extractor.py -v
+python -m pytest tests/test_analyzer.py
 
-# Run tests with coverage
-pytest tests/ --cov=src --cov-report=html
+# Run specific test function
+python -m pytest tests/test_analyzer.py::test_pdf_analysis
 
-# Run tests in parallel
-pytest tests/ -n auto
-
-# Run specific test markers
-pytest tests/ -m unit
-pytest tests/ -m "not slow"
+# Run tests with specific marker
+python -m pytest -m "slow"
 ```
 
 ## 📊 Test Coverage
 
-### Extractor Tests (`test_extractor.py`)
-
-**Core Functionality:**
-- ✅ PDF processing and text extraction
-- ✅ Table data extraction and parsing
-- ✅ Product data structure validation
-- ✅ Category assignment and classification
-- ✅ Confidence score calculation
-- ✅ Data cleaning and validation
-
-**Error Handling:**
-- ✅ Invalid PDF files
-- ✅ Corrupted data
-- ✅ Missing required fields
-- ✅ Empty or malformed content
-
-**Performance:**
-- ✅ Large dataset processing
-- ✅ Memory usage optimization
-- ✅ Processing time benchmarks
-
-### Analyzer Tests (`test_analyzer.py`)
-
-**Core Functionality:**
-- ✅ CalTrans terminology detection
-- ✅ Quantity extraction with various formats
-- ✅ Cross-reference analysis
-- ✅ Alert and warning generation
-- ✅ Lumber requirement calculations
-
-**Accuracy Testing:**
-- ✅ Pattern matching precision
-- ✅ Unit detection accuracy
-- ✅ Context extraction quality
-- ✅ Confidence score validation
-
-**Edge Cases:**
-- ✅ Special characters handling
-- ✅ Mixed case text processing
-- ✅ Duplicate term handling
-- ✅ Empty content processing
-
-### Bidding Tests (`test_bidding.py`)
-
-**Core Functionality:**
-- ✅ Bid generation workflow
-- ✅ Pricing calculations (markup, overhead, profit, tax)
-- ✅ Product matching to catalog
-- ✅ Excel output generation
-- ✅ Bid validation and quality checks
-
-**Calculation Accuracy:**
-- ✅ Subtotal calculations
-- ✅ Percentage-based adjustments
-- ✅ Tax calculations
-- ✅ Grand total validation
-
-**Excel Generation:**
-- ✅ File creation and formatting
-- ✅ Multiple sheet generation
-- ✅ Data validation in Excel
-- ✅ Professional formatting
-
-## 🧪 Test Fixtures
-
-### Shared Fixtures (`conftest.py`)
-
-```python
-# Sample data fixtures
-sample_catalog_data()      # Catalog DataFrame
-sample_analysis_data()     # Analysis results
-sample_bid_config()        # Bid configuration
-sample_bid_items()         # Bid line items
-sample_pdf_content()       # PDF text content
-
-# File fixtures
-temp_file()               # Temporary file
-temp_excel_file()         # Temporary Excel file
-temp_csv_file()           # Temporary CSV file
-
-# Mock fixtures
-mock_pdf_reader()         # Mock PDF reader
-mock_excel_writer()       # Mock Excel writer
-
-# Configuration fixtures
-performance_thresholds()  # Performance limits
-test_config()            # Test configuration
-```
-
-### Usage Example
-
-```python
-def test_extractor_with_sample_data(extractor, sample_catalog_data):
-    """Test extractor with sample catalog data"""
-    result = extractor.process_catalog(sample_catalog_data)
-    assert len(result) > 0
-    assert result['confidence_score'] > 0.7
-```
-
-## 📈 Performance Testing
-
-### Performance Thresholds
-
-Tests include performance benchmarks to ensure the system meets requirements:
-
-- **Processing Time**: < 10 seconds for large datasets
-- **Memory Usage**: < 200MB increase for large operations
-- **Confidence Score**: > 70% minimum accuracy
-- **Error Rate**: < 5% maximum error rate
-
-### Running Performance Tests
-
-```bash
-# Run only performance tests
-python run_tests.py --performance
-
-# Run with performance monitoring
-pytest tests/ -m performance --durations=10
-```
-
-## 🔧 Test Configuration
-
-### Pytest Configuration
-
-The test suite uses custom pytest configuration in `conftest.py`:
-
-- **Custom markers** for test categorization
-- **Shared fixtures** for common test data
-- **Performance thresholds** for benchmarking
-- **Utility functions** for common assertions
-
-### Environment Variables
-
-```bash
-# Set test environment
-export TEST_MODE=true
-export VERBOSE_OUTPUT=false
-export SAVE_TEST_RESULTS=true
-```
-
-## 📝 Writing New Tests
-
-### Test Structure
-
-```python
-class TestNewComponent:
-    """Test suite for new component"""
-    
-    @pytest.fixture
-    def component(self):
-        """Create component instance for testing"""
-        return NewComponent()
-    
-    def test_basic_functionality(self, component):
-        """Test basic functionality"""
-        result = component.process_data("test input")
-        assert result is not None
-        assert result.success is True
-    
-    def test_error_handling(self, component):
-        """Test error handling"""
-        with pytest.raises(ValueError):
-            component.process_data("")
-    
-    @pytest.mark.performance
-    def test_performance(self, component):
-        """Test performance with large dataset"""
-        large_data = "x" * 1000000
-        start_time = time.time()
-        result = component.process_data(large_data)
-        processing_time = time.time() - start_time
-        
-        assert processing_time < 5.0  # Should complete in under 5 seconds
-```
-
-### Best Practices
-
-1. **Use descriptive test names** that explain what is being tested
-2. **Follow AAA pattern**: Arrange, Act, Assert
-3. **Use fixtures** for common setup and teardown
-4. **Test edge cases** and error conditions
-5. **Include performance tests** for critical operations
-6. **Use appropriate markers** to categorize tests
-7. **Write comprehensive assertions** to validate results
-
-## 🐛 Debugging Tests
-
-### Common Issues
-
-1. **Import Errors**: Ensure `src` directory is in Python path
-2. **Missing Dependencies**: Install all required packages
-3. **File Path Issues**: Use `Path` objects for cross-platform compatibility
-4. **Mock Configuration**: Verify mock objects are properly configured
-
-### Debug Commands
-
-```bash
-# Run with detailed output
-pytest tests/ -v -s
-
-# Run single test with debugging
-pytest tests/test_extractor.py::TestWhitecapCatalogExtractor::test_extractor_initialization -v -s
-
-# Run with print statements
-pytest tests/ -s
-
-# Run with coverage and show missing lines
-pytest tests/ --cov=src --cov-report=term-missing
-```
-
-## 📊 Test Reports
+### Coverage Targets
+- **Overall Coverage**: 80% minimum
+- **Critical Components**: 90% minimum
+- **UI Components**: 70% minimum
+- **Utility Functions**: 85% minimum
 
 ### Coverage Reports
-
 ```bash
 # Generate HTML coverage report
 python run_tests.py --coverage
@@ -328,21 +95,216 @@ python run_tests.py --coverage
 open htmlcov/index.html
 ```
 
-### Test Results
+## 🎯 Test Components
 
-```bash
-# Generate JUnit XML report
-pytest tests/ --junitxml=test-results.xml
+### Analyzer Tests (`test_analyzer.py`)
+- PDF text extraction accuracy
+- Terminology detection precision
+- Quantity extraction validation
+- Error handling and edge cases
+- Performance benchmarks
 
-# Generate test report with all formats
-python run_tests.py --report
+### Bid Engine Tests (`test_bid_engine.py`)
+- Bid generation accuracy
+- Pricing calculation validation
+- Line item creation testing
+- Template processing verification
+- Export format testing
+
+### Extractor Tests (`test_extractor.py`)
+- Catalog data extraction
+- Table parsing accuracy
+- Product information validation
+- Error handling for corrupted files
+- Performance with large files
+
+### Product Matcher Tests (`test_product_matcher.py`)
+- Fuzzy matching algorithms
+- Confidence scoring accuracy
+- Multi-agency terminology support
+- Alternative product suggestions
+- Matching performance optimization
+
+### UI Component Tests (`test_ui_components.py`)
+- Component rendering
+- User interaction handling
+- State management
+- Error display
+- Responsive design testing
+
+## 🔧 Test Configuration
+
+### Pytest Configuration (`conftest.py`)
+```python
+# Shared fixtures
+@pytest.fixture
+def sample_pdf_file():
+    """Provide sample PDF for testing."""
+    return "tests/data/sample_project.pdf"
+
+@pytest.fixture
+def sample_catalog_data():
+    """Provide sample catalog data."""
+    return load_test_catalog_data()
+
+@pytest.fixture
+def mock_analysis_result():
+    """Provide mock analysis result."""
+    return create_mock_analysis_result()
 ```
 
-## 🔄 Continuous Integration
+### Test Data
+```
+tests/
+├── data/                    # Test data files
+│   ├── sample_project.pdf   # Sample project PDF
+│   ├── sample_catalog.pdf   # Sample catalog PDF
+│   ├── test_products.json   # Test product data
+│   └── expected_results/    # Expected test results
+└── fixtures/               # Test fixtures
+    ├── analysis_results.py # Analysis result fixtures
+    ├── bid_data.py         # Bid data fixtures
+    └── catalog_data.py     # Catalog data fixtures
+```
 
-### GitHub Actions Example
+## 🎨 Test Markers
 
+### Available Markers
+```python
+# Test categories
+@pytest.mark.unit           # Unit tests
+@pytest.mark.integration    # Integration tests
+@pytest.mark.functional     # Functional tests
+@pytest.mark.performance    # Performance tests
+
+# Test characteristics
+@pytest.mark.slow          # Slow running tests
+@pytest.mark.fast          # Fast running tests
+@pytest.mark.critical      # Critical functionality
+@pytest.mark.optional      # Optional features
+
+# Agency-specific tests
+@pytest.mark.caltrans      # CalTrans-specific tests
+@pytest.mark.dot           # DOT agency tests
+@pytest.mark.municipal     # Municipal tests
+@pytest.mark.federal       # Federal tests
+@pytest.mark.commercial    # Commercial tests
+```
+
+### Running Marked Tests
+```bash
+# Run only fast tests
+python -m pytest -m "fast"
+
+# Run critical tests
+python -m pytest -m "critical"
+
+# Run CalTrans-specific tests
+python -m pytest -m "caltrans"
+
+# Exclude slow tests
+python -m pytest -m "not slow"
+```
+
+## 🚨 Test Environment
+
+### Prerequisites
+```bash
+# Install test dependencies
+pip install pytest pytest-cov pytest-xdist pytest-html
+
+# Install development dependencies
+pip install -r requirements-dev.txt
+```
+
+### Environment Setup
+```bash
+# Set test environment
+export TESTING=True
+export TEST_DATA_PATH=tests/data
+export TEST_OUTPUT_PATH=tests/output
+
+# Run environment check
+python run_tests.py --check
+```
+
+## 📈 Performance Testing
+
+### Load Testing
+```bash
+# Run performance tests
+python run_tests.py --performance
+
+# Test with large files
+python -m pytest tests/test_performance.py::test_large_pdf_processing
+
+# Test concurrent processing
+python -m pytest tests/test_performance.py::test_concurrent_analysis
+```
+
+### Benchmark Tests
+- **File Processing Speed**: PDF analysis time
+- **Memory Usage**: Peak memory consumption
+- **Concurrent Users**: Multi-user simulation
+- **Database Performance**: Query optimization
+
+## 🔍 Debugging Tests
+
+### Verbose Output
+```bash
+# Maximum verbosity
+python -m pytest -vvv tests/test_analyzer.py
+
+# Show local variables on failure
+python -m pytest -l tests/test_analyzer.py
+
+# Show captured output
+python -m pytest -s tests/test_analyzer.py
+```
+
+### Test Debugging
+```python
+# Add debugging to tests
+def test_debug_example():
+    import pdb; pdb.set_trace()  # Debugger breakpoint
+    result = analyzer.analyze_pdf("test.pdf")
+    assert result is not None
+```
+
+### Logging
+```bash
+# Run tests with logging
+python -m pytest --log-cli-level=DEBUG tests/test_analyzer.py
+
+# Save test logs
+python -m pytest --log-file=test.log tests/
+```
+
+## 📊 Test Reporting
+
+### HTML Reports
+```bash
+# Generate HTML test report
+python -m pytest --html=test_report.html --self-contained-html
+
+# View report
+open test_report.html
+```
+
+### JUnit XML
+```bash
+# Generate JUnit XML report
+python -m pytest --junitxml=test_results.xml
+
+# For CI/CD integration
+python -m pytest --junitxml=test-results.xml --cov=src --cov-report=xml
+```
+
+## 🚀 Continuous Integration
+
+### GitHub Actions
 ```yaml
+# .github/workflows/tests.yml
 name: Tests
 on: [push, pull_request]
 jobs:
@@ -353,32 +315,46 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.8
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-xdist
+        run: pip install -r requirements.txt
       - name: Run tests
         run: python run_tests.py --coverage
-      - name: Upload coverage
-        uses: codecov/codecov-action@v1
 ```
 
-## 📚 Additional Resources
+### Pre-commit Hooks
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: python -m pytest
+        language: system
+        pass_filenames: false
+```
 
-- [Pytest Documentation](https://docs.pytest.org/)
-- [Pytest-cov Documentation](https://pytest-cov.readthedocs.io/)
-- [Python Testing Best Practices](https://realpython.com/python-testing/)
-- [Mock Documentation](https://docs.python.org/3/library/unittest.mock.html)
+## 📞 Support
 
-## 🤝 Contributing
+### Test Issues
+- Check test environment setup
+- Review test data and fixtures
+- Verify dependencies are installed
+- Check for environment-specific issues
 
-When adding new tests:
+### Adding New Tests
+1. Create test file in appropriate directory
+2. Follow naming convention: `test_*.py`
+3. Use descriptive test function names
+4. Add appropriate markers
+5. Include docstrings and comments
+6. Update this README if needed
 
-1. Follow the existing test structure and naming conventions
-2. Include both positive and negative test cases
-3. Add appropriate markers for test categorization
-4. Update this README if adding new test categories
-5. Ensure all tests pass before submitting
+## 📄 License
 
-For questions or issues with the test suite, please refer to the main project documentation or create an issue in the repository. 
+This test suite is part of PACE - Project Analysis & Construction Estimating and follows the same licensing terms as the main project.
+
+---
+
+**Made with ❤️ for the construction industry** 

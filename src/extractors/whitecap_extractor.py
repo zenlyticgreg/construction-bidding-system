@@ -1,12 +1,17 @@
 """
-Whitecap Catalog Extractor for CalTrans Bidding System
+Whitecap Catalog Extractor for PACE - Project Analysis & Construction Estimating
 
-This module provides comprehensive extraction capabilities for the Whitecap catalog:
-- PDF processing with pdfplumber
-- Table and text-based product extraction
-- Product categorization and prioritization
-- Progress tracking and error handling
-- Data standardization and export
+This module provides functionality to extract product information from Whitecap
+catalog PDFs for use in the PACE construction bidding automation platform.
+
+The extractor supports:
+- PDF text extraction and parsing
+- Table data extraction
+- Product information identification
+- Pricing and specification extraction
+- Multi-format export capabilities
+
+For more information, visit: https://pace-construction.com
 """
 
 import os
@@ -102,7 +107,7 @@ class WhitecapCatalogExtractor:
         self.config = config or ExtractionConfig()
         self.logger = self._setup_logger()
         self.validator = DataValidator()
-        self.settings = get_setting()
+        self.settings = get_setting('WHITECAP_EXTRACTOR_CONFIG', {})  # Fix: provide key parameter
         
         # Load catalog sections configuration
         self.catalog_sections = self._load_catalog_sections()
@@ -442,7 +447,7 @@ class WhitecapCatalogExtractor:
         # Identify header row
         header_row = None
         for i, row in enumerate(table):
-            if row and any(header in str(cell).upper() for cell in row if cell):
+            if row and any(any(header in str(cell).upper() for header in self.config.table_headers) for cell in row if cell):
                 header_row = i
                 break
         

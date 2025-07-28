@@ -1,8 +1,19 @@
 """
-Report Generator Module
+Report Generator for PACE - Project Analysis & Construction Estimating
 
-This module provides comprehensive reporting capabilities for the CalTrans bidding system,
-including extraction summaries, bid analysis, project comparisons, and management dashboards.
+This module provides comprehensive reporting capabilities for the PACE
+construction bidding automation platform, including extraction summaries,
+bid analysis, project comparisons, and management dashboards.
+
+The report generator supports:
+- Multi-format report generation (PDF, Excel, HTML)
+- Customizable report templates
+- Agency-specific report formats
+- Data visualization and charts
+- Automated report scheduling
+- Email delivery and notifications
+
+For more information, visit: https://pace-construction.com
 """
 
 import io
