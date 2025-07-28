@@ -6,7 +6,7 @@
 ![Powered by Squires Lumber](https://img.shields.io/badge/Powered%20by-Squires%20Lumber-orange?style=for-the-badge)
 
 **Intelligent Construction Estimating Platform**  
-*Powered by Squires Lumber*
+*Powered by PACE*
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)](https://streamlit.io/)
@@ -79,6 +79,42 @@ PACE - Project Analysis & Construction Estimating is designed to revolutionize h
 
 ---
 
+## 🏗️ Project Structure
+
+```
+pace-construction-estimating/
+├── src/pace/                    # Main package
+│   ├── core/                   # Core functionality
+│   │   ├── config.py          # Configuration management
+│   │   └── logging.py         # Logging setup
+│   ├── models/                # Data models
+│   │   ├── base.py           # Base model classes
+│   │   ├── project.py        # Project-related models
+│   │   ├── catalog.py        # Catalog models
+│   │   ├── bid.py           # Bidding models
+│   │   └── agency.py        # Agency models
+│   ├── services/             # Business logic
+│   │   ├── project_service.py
+│   │   ├── catalog_service.py
+│   │   ├── analysis_service.py
+│   │   ├── bidding_service.py
+│   │   └── file_service.py
+│   ├── api/                  # API endpoints
+│   ├── cli/                  # Command-line interface
+│   └── main.py              # Main entry point
+├── tests/                    # Test suite
+├── docs/                     # Documentation
+├── data/                     # Data storage
+├── logs/                     # Application logs
+├── output/                   # Generated outputs
+├── pyproject.toml           # Project configuration
+├── Makefile                 # Development tasks
+├── .pre-commit-config.yaml  # Code quality hooks
+└── README.md               # This file
+```
+
+---
+
 ## 🛠️ Installation & Setup
 
 ### Quick Start
@@ -88,10 +124,14 @@ PACE - Project Analysis & Construction Estimating is designed to revolutionize h
 git clone https://github.com/your-org/pace-construction-estimating.git
 cd pace-construction-estimating
 
-# Run the application
-./run_app.sh  # macOS/Linux
-# or
-run_app.bat   # Windows
+# Install in development mode
+make install-dev
+
+# Initialize the application
+make init
+
+# Run the CLI
+make run
 ```
 
 ### Manual Installation
@@ -104,15 +144,62 @@ source venv/bin/activate  # macOS/Linux
 venv\Scripts\activate     # Windows
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -e ".[dev]"
 
-# Run the application
-streamlit run main.py
+# Initialize pre-commit hooks
+pre-commit install
+
+# Initialize the application
+python -m pace.cli.main init
+```
+
+### Environment Configuration
+
+Copy the example environment file and customize as needed:
+
+```bash
+cp env.example .env
+# Edit .env with your settings
 ```
 
 ---
 
 ## 📖 Usage Guide
+
+### Command Line Interface
+
+```bash
+# Show help
+pace --help
+
+# Initialize application
+pace init
+
+# Create a new project
+pace create-project "Highway Bridge Project" --type highway --agency caltrans
+
+# List projects
+pace projects --all
+
+# Analyze a PDF
+pace analyze project-id specification.pdf
+
+# Generate a bid
+pace generate-bid project-id --output bid.xlsx
+
+# Show statistics
+pace stats
+
+# Show configuration
+pace config
+```
+
+### Web Interface
+
+```bash
+# Run the Streamlit web interface
+streamlit run main.py
+```
 
 ### 1. **Extract Catalog**
 Upload Whitecap or other supplier catalogs to build your product database.
@@ -144,16 +231,15 @@ PACE supports all major construction project types, from highway infrastructure 
 
 ### Environment Variables
 
-```bash
-# Database configuration
-PACE_DB_PATH=data/pace_construction.db
+The application uses environment variables for configuration. See `env.example` for all available options.
 
-# Logging configuration  
-PACE_LOG_LEVEL=INFO
+Key configuration areas:
 
-# Agency-specific settings
-PACE_DEFAULT_AGENCY=caltrans
-```
+- **Database**: Connection settings and pooling
+- **Logging**: Log levels, formats, and file rotation
+- **File Handling**: Upload limits, allowed extensions
+- **Agency Support**: Default agency and supported types
+- **UI Settings**: Theme, layout, and display options
 
 ### Agency Support
 
@@ -167,54 +253,75 @@ PACE includes specialized configurations for:
 
 ---
 
+## 🧪 Development
+
+### Code Quality
+
+```bash
+# Format code
+make format
+
+# Run linting
+make lint
+
+# Run all checks
+make check-all
+```
+
+### Testing
+
+```bash
+# Run all tests
+make test
+
+# Run unit tests only
+make test-unit
+
+# Run integration tests only
+make test-integration
+```
+
+### Pre-commit Hooks
+
+The project uses pre-commit hooks for code quality:
+
+- **Black**: Code formatting
+- **isort**: Import sorting
+- **flake8**: Linting
+- **mypy**: Type checking
+- **bandit**: Security scanning
+
+---
+
 ## 📊 API Documentation
 
 ### Core Classes
 
-#### `ProjectPDFAnalyzer`
-Main class for analyzing project specification PDFs.
+#### `ProjectService`
+Service for managing construction projects.
 
 ```python
-from src.analyzers.caltrans_analyzer import ProjectPDFAnalyzer
+from pace.services.project_service import ProjectService
 
-analyzer = ProjectPDFAnalyzer()
-results = analyzer.analyze_pdf("project_specs.pdf")
+service = ProjectService()
+project = service.create_project(
+    name="Highway Project",
+    project_type=ProjectType.HIGHWAY,
+    agency="CalTrans"
+)
 ```
 
-#### `ConstructionBiddingEngine`
-Professional bid generation for all project types.
+#### `Project`
+Model for construction projects.
 
 ```python
-from src.bidding.bid_engine import ConstructionBiddingEngine
+from pace.models.project import Project, ProjectType
 
-engine = ConstructionBiddingEngine()
-bid = engine.generate_bid(project_data, catalog_data)
-```
-
-#### `WhitecapExtractor`
-Catalog extraction and product management.
-
-```python
-from src.extractors.whitecap_extractor import WhitecapExtractor
-
-extractor = WhitecapExtractor()
-catalog = extractor.extract_catalog("whitecap_catalog.pdf")
-```
-
----
-
-## 🧪 Testing
-
-Run the comprehensive test suite:
-
-```bash
-# Run all tests
-python run_tests.py
-
-# Run specific test categories
-python run_tests.py --unit
-python run_tests.py --integration
-python run_tests.py --performance
+project = Project(
+    name="Bridge Construction",
+    project_type=ProjectType.BRIDGE,
+    agency="CalTrans"
+)
 ```
 
 ---
@@ -234,9 +341,19 @@ We welcome contributions from the construction industry and development communit
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Install development dependencies (`make install-dev`)
+4. Make your changes
+5. Run tests and quality checks (`make check-all`)
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+### Development Setup
+
+```bash
+# Complete development setup
+make dev-setup
+```
 
 ---
 
