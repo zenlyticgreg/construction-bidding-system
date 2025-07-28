@@ -150,13 +150,21 @@ class OnlineExtractionConfig:
     enable_progress_tracking: bool = True
     enable_validation: bool = True
     export_format: str = "csv"
-    rate_limit_delay: float = 1.0  # seconds between requests
-    use_selenium: bool = False  # Disabled by default
-    headless_browser: bool = True
+    rate_limit_delay: float = 3.0  # Increased to 3 seconds between requests
+    use_selenium: bool = True  # Enable Selenium for better human-like behavior
+    headless_browser: bool = False  # Show browser for more human-like appearance
     timeout_seconds: int = 30
     max_retries: int = 3
     save_progress: bool = True
     progress_file: str = "extraction_progress.json"
+    # Human-like behavior settings
+    human_like_delays: bool = True
+    min_page_load_delay: float = 2.0  # Minimum time to wait after page load
+    max_page_load_delay: float = 5.0  # Maximum time to wait after page load
+    min_scroll_delay: float = 0.5  # Minimum time between scrolls
+    max_scroll_delay: float = 2.0  # Maximum time between scrolls
+    min_click_delay: float = 1.0  # Minimum time before clicking
+    max_click_delay: float = 3.0  # Maximum time before clicking
 
 
 class WhitecapOnlineExtractor:
@@ -234,6 +242,82 @@ class WhitecapOnlineExtractor:
             logger.addHandler(handler)
         
         return logger
+    
+    def _human_like_delay(self, min_delay: float = None, max_delay: float = None):
+        """Add a human-like random delay"""
+        if not self.config.human_like_delays:
+            return
+        
+        if min_delay is None:
+            min_delay = self.config.min_page_load_delay
+        if max_delay is None:
+            max_delay = self.config.max_page_load_delay
+        
+        delay = random.uniform(min_delay, max_delay)
+        self.logger.debug(f"Human-like delay: {delay:.2f} seconds")
+        time.sleep(delay)
+    
+    def _human_like_scroll(self, driver):
+        """Perform human-like scrolling on the page"""
+        if not self.config.human_like_delays or not driver:
+            return
+        
+        try:
+            # Get page height
+            page_height = driver.execute_script("return document.body.scrollHeight")
+            viewport_height = driver.execute_script("return window.innerHeight")
+            
+            # Scroll down gradually like a human would
+            current_position = 0
+            while current_position < page_height:
+                # Random scroll amount (like human scrolling)
+                scroll_amount = random.randint(300, 800)
+                current_position += scroll_amount
+                
+                driver.execute_script(f"window.scrollTo(0, {current_position});")
+                
+                # Random delay between scrolls
+                scroll_delay = random.uniform(
+                    self.config.min_scroll_delay, 
+                    self.config.max_scroll_delay
+                )
+                time.sleep(scroll_delay)
+                
+                # Sometimes pause longer (like reading content)
+                if random.random() < 0.3:  # 30% chance
+                    pause_delay = random.uniform(1.0, 3.0)
+                    time.sleep(pause_delay)
+            
+            # Scroll back to top
+            driver.execute_script("window.scrollTo(0, 0);")
+            time.sleep(random.uniform(0.5, 1.5))
+            
+        except Exception as e:
+            self.logger.debug(f"Error during human-like scrolling: {e}")
+    
+    def _human_like_click(self, element, driver):
+        """Perform human-like clicking on an element"""
+        if not self.config.human_like_delays or not driver:
+            return element
+        
+        try:
+            # Scroll element into view
+            driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element)
+            
+            # Random delay before clicking
+            click_delay = random.uniform(
+                self.config.min_click_delay, 
+                self.config.max_click_delay
+            )
+            time.sleep(click_delay)
+            
+            # Click the element
+            element.click()
+            
+        except Exception as e:
+            self.logger.debug(f"Error during human-like clicking: {e}")
+        
+        return element
     
     def _setup_session(self):
         """Setup requests session with proper headers"""
@@ -365,15 +449,22 @@ class WhitecapOnlineExtractor:
                 try:
                     category_products = self._extract_category_products(category_name, category_url)
                     all_products.extend(category_products)
-                    self.stats["categories_processed"] += 1
-                    self.processed_categories.add(category_name)
+                    
+                    # Only mark as processed if we actually got products
+                    if category_products:
+                        self.stats["categories_processed"] += 1
+                        self.processed_categories.add(category_name)
+                        self.logger.info(f"✅ Extracted {len(category_products)} products from {category_name}")
+                    else:
+                        self.logger.warning(f"⚠️  No products found in category: {category_name}")
                     
                     # Save progress periodically
                     if self.config.save_progress and self.stats["categories_processed"] % 5 == 0:
                         self._save_progress()
                     
-                    # Rate limiting
-                    time.sleep(self.config.rate_limit_delay)
+                    # Human-like delay between categories
+                    self.logger.info(f"Completed category: {category_name}. Taking a break...")
+                    self._human_like_delay(5.0, 10.0)  # Longer delay between categories
                     
                 except Exception as e:
                     self.logger.error(f"Error processing category {category_name}: {e}")
@@ -413,8 +504,17 @@ class WhitecapOnlineExtractor:
         
         try:
             if self.config.use_selenium and self.driver:
+                self.logger.info("Navigating to Whitecap homepage...")
                 self.driver.get(self.config.base_url)
-                time.sleep(3)  # Wait for page to load
+                
+                # Human-like delay after page load
+                self._human_like_delay()
+                
+                # Perform human-like scrolling to load all content
+                self._human_like_scroll(self.driver)
+                
+                # Additional delay after scrolling
+                self._human_like_delay(1.0, 2.0)
                 
                 # Look for category navigation elements
                 category_selectors = [
@@ -538,6 +638,155 @@ class WhitecapOnlineExtractor:
             List of product data objects
         """
         products = []
+        
+        try:
+            # First, get subcategories from the main category page
+            subcategories = self._get_subcategories(category_name, category_url)
+            self.logger.info(f"Found {len(subcategories)} subcategories in {category_name}")
+            
+            if not subcategories:
+                self.logger.warning(f"No subcategories found in {category_name}, trying direct product extraction")
+                # Try direct product extraction as fallback
+                return self._extract_products_direct(category_name, category_url)
+            
+            # Extract products from each subcategory
+            for subcategory_name, subcategory_url in subcategories.items():
+                try:
+                    self.logger.info(f"Extracting products from subcategory: {subcategory_name}")
+                    
+                    # Get sub-subcategories from the subcategory page
+                    sub_subcategories = self._get_subcategories(subcategory_name, subcategory_url)
+                    self.logger.info(f"Found {len(sub_subcategories)} sub-subcategories in {subcategory_name}")
+                    
+                    if sub_subcategories:
+                        # Extract products from each sub-subcategory
+                        for sub_subcategory_name, sub_subcategory_url in sub_subcategories.items():
+                            try:
+                                self.logger.info(f"Extracting products from sub-subcategory: {sub_subcategory_name}")
+                                sub_subcategory_products = self._extract_products_direct(sub_subcategory_name, sub_subcategory_url)
+                                products.extend(sub_subcategory_products)
+                                
+                                if sub_subcategory_products:
+                                    self.logger.info(f"✅ Extracted {len(sub_subcategory_products)} products from {sub_subcategory_name}")
+                                else:
+                                    self.logger.warning(f"⚠️  No products found in sub-subcategory: {sub_subcategory_name}")
+                                
+                                # Human-like delay between sub-subcategories
+                                self._human_like_delay(2.0, 4.0)
+                                
+                            except Exception as e:
+                                self.logger.error(f"Error extracting from sub-subcategory {sub_subcategory_name}: {e}")
+                                continue
+                    else:
+                        # Try direct extraction from subcategory if no sub-subcategories found
+                        subcategory_products = self._extract_products_direct(subcategory_name, subcategory_url)
+                        products.extend(subcategory_products)
+                        
+                        if subcategory_products:
+                            self.logger.info(f"✅ Extracted {len(subcategory_products)} products from {subcategory_name}")
+                        else:
+                            self.logger.warning(f"⚠️  No products found in subcategory: {subcategory_name}")
+                    
+                    # Human-like delay between subcategories
+                    self._human_like_delay(3.0, 6.0)
+                    
+                except Exception as e:
+                    self.logger.error(f"Error extracting from subcategory {subcategory_name}: {e}")
+                    continue
+            
+            return products[:self.config.max_products_per_category]
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting products from category {category_name}: {e}")
+            return []
+    
+    def _get_subcategories(self, category_name: str, category_url: str) -> Dict[str, str]:
+        """
+        Extract subcategory names and URLs from a category page
+        
+        Args:
+            category_name: Name of the category
+            category_url: URL of the category page
+            
+        Returns:
+            Dictionary mapping subcategory names to URLs
+        """
+        subcategories = {}
+        
+        try:
+            if self.config.use_selenium and self.driver:
+                self.logger.info(f"Navigating to category page: {category_name}")
+                self.driver.get(category_url)
+                
+                # Human-like delay after page load
+                self._human_like_delay()
+                
+                # Perform human-like scrolling to load all content
+                self._human_like_scroll(self.driver)
+                
+                # Additional delay after scrolling
+                self._human_like_delay(1.0, 2.0)
+                
+                # Look for subcategory links
+                subcategory_selectors = [
+                    "a[href*='/catalog/']",
+                    ".StyledButton[href*='/catalog/']",
+                    "a[data-test-selector*='categoryDetailsSubCategoriesLink']"
+                ]
+                
+                for selector in subcategory_selectors:
+                    try:
+                        elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+                        for element in elements:
+                            subcategory_name = element.text.strip()
+                            subcategory_url = element.get_attribute('href')
+                            
+                            if (subcategory_name and subcategory_url and 
+                                len(subcategory_name) > 2 and 
+                                subcategory_url != category_url and
+                                '/catalog/' in subcategory_url):
+                                subcategories[subcategory_name] = subcategory_url
+                    except Exception as e:
+                        self.logger.debug(f"Selector {selector} failed: {e}")
+                        continue
+                        
+            else:
+                # Fallback to requests
+                response = self.session.get(category_url)
+                response.raise_for_status()
+                
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Look for subcategory links
+                subcategory_links = soup.find_all('a', href=re.compile(r'/catalog/.*-en'))
+                
+                for link in subcategory_links:
+                    subcategory_name = link.text.strip()
+                    subcategory_url = urljoin(self.config.base_url, link.get('href'))
+                    
+                    if (subcategory_name and subcategory_url and 
+                        len(subcategory_name) > 2 and 
+                        subcategory_url != category_url):
+                        subcategories[subcategory_name] = subcategory_url
+            
+            return subcategories
+            
+        except Exception as e:
+            self.logger.error(f"Error getting subcategories for {category_name}: {e}")
+            return {}
+    
+    def _extract_products_direct(self, category_name: str, category_url: str) -> List[OnlineProductData]:
+        """
+        Extract products directly from a category/subcategory page
+        
+        Args:
+            category_name: Name of the category/subcategory
+            category_url: URL of the category/subcategory page
+            
+        Returns:
+            List of product data objects
+        """
+        products = []
         page_num = 1
         
         try:
@@ -545,13 +794,23 @@ class WhitecapOnlineExtractor:
                 page_url = f"{category_url}?page={page_num}" if page_num > 1 else category_url
                 
                 if self.config.use_selenium and self.driver:
+                    self.logger.info(f"Loading page {page_num} for {category_name}")
                     self.driver.get(page_url)
-                    time.sleep(2)
                     
-                    # Wait for product listings to load
+                    # Human-like delay after page load
+                    self._human_like_delay()
+                    
+                    # Perform human-like scrolling to load all content
+                    self._human_like_scroll(self.driver)
+                    
+                    # Additional delay after scrolling
+                    self._human_like_delay(1.0, 2.0)
+                    
+                    # Wait for product listings to load - updated selectors for Whitecap
                     try:
-                        WebDriverWait(self.driver, 10).until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, ".product-item, .product-listing, .item, .product-card"))
+                        WebDriverWait(self.driver, 15).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, 
+                                ".product-item, .product-listing, .item, .product-card, [data-test-selector*='product'], div[class*='GridItemStyle']"))
                         )
                     except TimeoutException:
                         self.logger.warning(f"No products found on page {page_num} for {category_name}")
@@ -561,6 +820,10 @@ class WhitecapOnlineExtractor:
                     page_products = self._extract_products_from_page(category_name)
                     
                     if not page_products:
+                        # Try to check if this is actually a product listing page or just another category page
+                        page_source = self.driver.page_source
+                        if 'product' in page_source.lower() or '$' in page_source:
+                            self.logger.info(f"Page contains product indicators but no products extracted - may need different selectors")
                         break
                     
                     products.extend(page_products)
@@ -574,6 +837,10 @@ class WhitecapOnlineExtractor:
                     page_products = self._extract_products_from_soup(soup, category_name)
                     
                     if not page_products:
+                        # Check if page contains product indicators
+                        page_text = soup.get_text().lower()
+                        if 'product' in page_text or '$' in page_text:
+                            self.logger.info(f"Page contains product indicators but no products extracted - may need different selectors")
                         break
                     
                     products.extend(page_products)
@@ -584,7 +851,7 @@ class WhitecapOnlineExtractor:
             return products[:self.config.max_products_per_category]
             
         except Exception as e:
-            self.logger.error(f"Error extracting products from category {category_name}: {e}")
+            self.logger.error(f"Error extracting products directly from {category_name}: {e}")
             return []
     
     def _extract_products_from_page(self, category_name: str) -> List[OnlineProductData]:
@@ -657,15 +924,73 @@ class WhitecapOnlineExtractor:
         products = []
         
         try:
-            # Find product containers - updated for Whitecap's React structure
-            product_elements = soup.find_all(['div', 'article', 'section'], 
-                class_=re.compile(r'product|item|card|GridItemStyle'))
+            # First, try to extract from JavaScript data (this is more reliable for Whitecap)
+            self.logger.info("Attempting to extract products from JavaScript data")
+            products = self._extract_products_from_javascript_data(soup, category_name)
             
-            # Also look for elements with data-test-selector containing 'product'
-            test_selector_elements = soup.find_all(attrs={'data-test-selector': re.compile(r'product', re.I)})
-            product_elements.extend(test_selector_elements)
+            # If no products found in JavaScript data, try traditional HTML selectors
+            if not products:
+                self.logger.info("No products found in JavaScript data, trying traditional HTML selectors")
+                
+                # Updated selectors for Whitecap's React structure
+                product_selectors = [
+                    # Look for GridItemStyle elements that might contain products
+                    'div[class*="GridItemStyle"]',
+                    # Look for elements with product-related data attributes
+                    '[data-test-selector*="product"]',
+                    '[data-testid*="product"]',
+                    # Look for elements with product-related classes
+                    '.product-item', '.product-listing', '.item', '.product-card',
+                    '.catalog-item', '.catalog-product', '.search-result',
+                    # Look for any div with product-related text
+                    'div:contains("SKU")', 'div:contains("Price")', 'div:contains("$")'
+                ]
             
+            product_elements = []
+            
+            for selector in product_selectors:
+                try:
+                    if ':contains(' in selector:
+                        # Handle :contains pseudo-selector manually
+                        if 'SKU' in selector:
+                            elements = soup.find_all('div', text=re.compile(r'SKU|sku', re.I))
+                        elif 'Price' in selector:
+                            elements = soup.find_all('div', text=re.compile(r'Price|price', re.I))
+                        elif '$' in selector:
+                            elements = soup.find_all('div', text=re.compile(r'\$[\d,]+\.?\d*'))
+                        else:
+                            continue
+                    else:
+                        elements = soup.select(selector)
+                    
+                    product_elements.extend(elements)
+                except Exception as e:
+                    self.logger.debug(f"Selector {selector} failed: {e}")
+                    continue
+            
+            # Remove duplicates while preserving order
+            seen = set()
+            unique_elements = []
             for element in product_elements:
+                if element not in seen:
+                    seen.add(element)
+                    unique_elements.append(element)
+            
+            self.logger.info(f"Found {len(unique_elements)} potential product elements in {category_name}")
+            
+            # If still no products found, try to find any elements with prices
+            if not unique_elements:
+                self.logger.warning(f"No products found with standard selectors in {category_name}, searching for price elements")
+                price_elements = soup.find_all(text=re.compile(r'\$[\d,]+\.?\d*'))
+                if price_elements:
+                    self.logger.info(f"Found {len(price_elements)} elements with prices in {category_name}")
+                    # Get parent elements of price text
+                    for price_text in price_elements[:10]:  # Limit to first 10
+                        parent = price_text.parent
+                        if parent and parent not in unique_elements:
+                            unique_elements.append(parent)
+            
+            for element in unique_elements:
                 try:
                     product_data = self._extract_single_product_from_soup(element, category_name)
                     if product_data and product_data.sku not in self.extracted_products:
@@ -675,11 +1000,177 @@ class WhitecapOnlineExtractor:
                     self.logger.warning(f"Error extracting individual product: {e}")
                     continue
             
+            self.logger.info(f"Successfully extracted {len(products)} products from {category_name}")
             return products
             
         except Exception as e:
             self.logger.error(f"Error extracting products from soup: {e}")
             return []
+    
+    def _extract_products_from_javascript_data(self, soup: BeautifulSoup, category_name: str) -> List[OnlineProductData]:
+        """
+        Extract products from JavaScript data embedded in the HTML
+        
+        Args:
+            soup: BeautifulSoup object of the page
+            category_name: Name of the category
+            
+        Returns:
+            List of product data objects
+        """
+        products = []
+        
+        try:
+            # Look for script tags that might contain product data
+            script_tags = soup.find_all('script')
+            
+            for script in script_tags:
+                script_content = script.string
+                if not script_content:
+                    continue
+                
+                # Look for product data patterns in JavaScript
+                # Pattern 1: productInfosById object
+                product_info_pattern = r'"productInfosById":\s*\{([^}]+)\}'
+                product_info_matches = re.findall(product_info_pattern, script_content, re.DOTALL)
+                
+                for match in product_info_matches:
+                    # Extract individual product data
+                    product_pattern = r'"([a-f0-9\-]+)":\s*\{([^}]+)\}'
+                    product_matches = re.findall(product_pattern, match, re.DOTALL)
+                    
+                    for product_id, product_data in product_matches:
+                        try:
+                            # Extract product information
+                            product_name_match = re.search(r'"productName":\s*"([^"]+)"', product_data)
+                            title_match = re.search(r'"title":\s*"([^"]+)"', product_data)
+                            sku_match = re.search(r'"sku":\s*"([^"]+)"', product_data)
+                            
+                            # Extract pricing information
+                            pricing_pattern = r'"pricing":\s*\{([^}]+)\}'
+                            pricing_match = re.search(pricing_pattern, product_data, re.DOTALL)
+                            
+                            price = None
+                            if pricing_match:
+                                price_match = re.search(r'"unitListPrice":\s*([\d\.]+)', pricing_match.group(1))
+                                if price_match:
+                                    price = float(price_match.group(1))
+                            
+                            # Create product data object
+                            if product_name_match or title_match:
+                                product_name = product_name_match.group(1) if product_name_match else title_match.group(1)
+                                sku = sku_match.group(1) if sku_match else product_name
+                                
+                                # Extract size and unit from product name
+                                size = self._extract_size(product_name)
+                                unit = self._determine_unit(product_name)
+                                
+                                # Create product data
+                                product_data_obj = OnlineProductData(
+                                    sku=sku,
+                                    product_name=product_name,
+                                    description=title_match.group(1) if title_match else product_name,
+                                    size=size,
+                                    unit=unit,
+                                    price=price,
+                                    category=self._map_category(category_name),
+                                    subcategory=category_name,
+                                    url=f"{self.config.base_url}/product/{sku.lower()}",
+                                    confidence_score=0.8 if price else 0.6
+                                )
+                                
+                                if product_data_obj.sku not in self.extracted_products:
+                                    products.append(product_data_obj)
+                                    self.extracted_products.add(product_data_obj.sku)
+                                    self.logger.debug(f"Extracted product from JavaScript: {product_name} (SKU: {sku})")
+                        
+                        except Exception as e:
+                            self.logger.debug(f"Error parsing individual product data: {e}")
+                            continue
+                
+                # Pattern 2: Look for product data in other JavaScript objects
+                # This is a more general pattern for finding product information
+                general_product_pattern = r'"productId":\s*"([^"]+)".*?"productName":\s*"([^"]+)".*?"title":\s*"([^"]+)".*?"sku":\s*"([^"]+)"'
+                general_matches = re.findall(general_product_pattern, script_content, re.DOTALL)
+                
+                for product_id, product_name, title, sku in general_matches:
+                    try:
+                        # Extract price if available
+                        price_pattern = rf'"productId":\s*"{re.escape(product_id)}".*?"unitListPrice":\s*([\d\.]+)'
+                        price_match = re.search(price_pattern, script_content, re.DOTALL)
+                        price = float(price_match.group(1)) if price_match else None
+                        
+                        # Extract size and unit from the full title
+                        size = self._extract_size(title)
+                        unit = self._determine_unit(title)
+                        
+                        # Create product data
+                        product_data_obj = OnlineProductData(
+                            sku=sku,
+                            product_name=title,  # Use the full title instead of just productName
+                            description=title,
+                            size=size,
+                            unit=unit,
+                            price=price,
+                            category=self._map_category(category_name),
+                            subcategory=category_name,
+                            url=f"{self.config.base_url}/product/{sku.lower()}",
+                            confidence_score=0.8 if price else 0.6
+                        )
+                        
+                        if product_data_obj.sku not in self.extracted_products:
+                            products.append(product_data_obj)
+                            self.extracted_products.add(product_data_obj.sku)
+                            self.logger.debug(f"Extracted product from general pattern: {title} (SKU: {sku})")
+                    
+                    except Exception as e:
+                        self.logger.debug(f"Error parsing general product pattern: {e}")
+                        continue
+            
+            self.logger.info(f"Extracted {len(products)} products from JavaScript data in {category_name}")
+            return products
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting products from JavaScript data: {e}")
+            return []
+    
+    def _map_category(self, category_name: str) -> ProductCategory:
+        """
+        Map category name to ProductCategory enum
+        """
+        category_mapping = {
+            'adhesives': ProductCategory.ADHESIVES,
+            'caulk': ProductCategory.CAULK_SEALANTS,
+            'sealants': ProductCategory.CAULK_SEALANTS,
+            'anchoring': ProductCategory.ANCHORING_FASTENERS,
+            'fasteners': ProductCategory.ANCHORING_FASTENERS,
+            'brick': ProductCategory.BRICK_STONE,
+            'stone': ProductCategory.BRICK_STONE,
+            'building': ProductCategory.BUILDING_MATERIALS,
+            'cleaning': ProductCategory.CLEANING_TOOLS,
+            'concrete': ProductCategory.CONCRETE_CHEMICALS,
+            'electrical': ProductCategory.ELECTRICAL_LIGHTING,
+            'lighting': ProductCategory.ELECTRICAL_LIGHTING,
+            'erosion': ProductCategory.EROSION_CONTROL,
+            'hand': ProductCategory.HAND_TOOLS,
+            'tools': ProductCategory.HAND_TOOLS,
+            'jobsite': ProductCategory.JOBSITE_SUPPLIES,
+            'ladders': ProductCategory.LADDERS_SCAFFOLDING,
+            'scaffolding': ProductCategory.LADDERS_SCAFFOLDING,
+            'masonry': ProductCategory.MASONRY_BLOCK,
+            'material': ProductCategory.MATERIAL_HANDLING,
+            'measuring': ProductCategory.MEASURING_MARKING,
+            'power': ProductCategory.POWER_TOOLS,
+            'safety': ProductCategory.SAFETY,
+            'waterproofing': ProductCategory.WATERPROOFING
+        }
+        
+        category_lower = category_name.lower()
+        for key, category in category_mapping.items():
+            if key in category_lower:
+                return category
+        
+        return ProductCategory.UNKNOWN
     
     def _extract_single_product(self, element, category_name: str) -> Optional[OnlineProductData]:
         """
@@ -748,11 +1239,36 @@ class WhitecapOnlineExtractor:
             ProductData object or None
         """
         try:
-            # Extract basic product information
-            product_name = self._safe_get_text_soup(element, ".product-name, .item-name, h3, h4, .title")
-            sku = self._safe_get_text_soup(element, ".sku, .product-sku, [data-sku], .product-id")
-            price_text = self._safe_get_text_soup(element, ".price, .product-price, .item-price, .cost")
-            description = self._safe_get_text_soup(element, ".description, .product-desc, .item-desc, .summary")
+            # Get all text content from the element
+            all_text = element.get_text(strip=True)
+            
+            # Extract basic product information with multiple selector strategies
+            product_name = (
+                self._safe_get_text_soup(element, ".product-name, .item-name, h3, h4, .title, .TypographyStyle") or
+                self._safe_get_text_soup(element, "[data-test-selector*='product']") or
+                self._safe_get_text_soup(element, "span, div")  # Fallback to any text
+            )
+            
+            # Try to extract SKU from various sources
+            sku = (
+                self._safe_get_text_soup(element, ".sku, .product-sku, [data-sku], .product-id") or
+                self._safe_get_text_soup(element, "[data-test-selector*='sku']") or
+                self._extract_sku_from_text(all_text)
+            )
+            
+            # Try to extract price from various sources
+            price_text = (
+                self._safe_get_text_soup(element, ".price, .product-price, .item-price, .cost") or
+                self._safe_get_text_soup(element, "[data-test-selector*='price']") or
+                self._extract_price_text_from_element(element)
+            )
+            
+            # Extract description
+            description = (
+                self._safe_get_text_soup(element, ".description, .product-desc, .item-desc, .summary") or
+                product_name or
+                all_text[:200]  # Use first 200 chars as description
+            )
             
             # Extract additional information
             mfg_number = self._safe_get_text_soup(element, ".mfg-number, .manufacturer-number, .brand")
@@ -767,6 +1283,10 @@ class WhitecapOnlineExtractor:
             
             # Determine category
             category = self.category_mapping.get(category_name, ProductCategory.UNKNOWN)
+            
+            # Only create product data if we have at least a name or description
+            if not product_name and not description:
+                return None
             
             # Create product data
             product_data = OnlineProductData(
@@ -790,6 +1310,42 @@ class WhitecapOnlineExtractor:
         except Exception as e:
             self.logger.warning(f"Error extracting single product: {e}")
             return None
+    
+    def _extract_sku_from_text(self, text: str) -> str:
+        """Extract SKU from text using regex patterns"""
+        if not text:
+            return ""
+        
+        # Common SKU patterns
+        sku_patterns = [
+            r'SKU[:\s]*([A-Z0-9\-_]+)',
+            r'Item[:\s]*([A-Z0-9\-_]+)',
+            r'Product[:\s]*([A-Z0-9\-_]+)',
+            r'([A-Z]{2,}[0-9]{3,})',  # Pattern like ABC123
+            r'([A-Z0-9]{6,})'  # Any 6+ character alphanumeric
+        ]
+        
+        for pattern in sku_patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+        
+        return ""
+    
+    def _extract_price_text_from_element(self, element) -> str:
+        """Extract price text from element using multiple strategies"""
+        # Look for price in the element's text
+        text = element.get_text()
+        price_match = re.search(r'\$[\d,]+\.?\d*', text)
+        if price_match:
+            return price_match.group(0)
+        
+        # Look for price in child elements
+        price_elements = element.find_all(text=re.compile(r'\$[\d,]+\.?\d*'))
+        if price_elements:
+            return price_elements[0].strip()
+        
+        return ""
     
     def _safe_get_text(self, element, selector: str) -> str:
         """Safely get text from Selenium element"""

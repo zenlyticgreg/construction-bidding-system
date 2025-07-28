@@ -11,23 +11,23 @@ from pathlib import Path
 def check_dependencies():
     """Check if required dependencies are installed"""
     required_packages = [
-        'requests',
-        'beautifulsoup4', 
-        'selenium',
-        'lxml',
-        'webdriver-manager',
-        'fake-useragent'
+        ('requests', 'requests'),
+        ('beautifulsoup4', 'bs4'), 
+        ('selenium', 'selenium'),
+        ('lxml', 'lxml'),
+        ('webdriver-manager', 'webdriver_manager'),
+        ('fake-useragent', 'fake_useragent')
     ]
     
     missing_packages = []
     
-    for package in required_packages:
+    for package_name, module_name in required_packages:
         try:
-            importlib.import_module(package.replace('-', '_'))
-            print(f"✓ {package}")
+            importlib.import_module(module_name)
+            print(f"✓ {package_name}")
         except ImportError:
-            missing_packages.append(package)
-            print(f"✗ {package} - MISSING")
+            missing_packages.append(package_name)
+            print(f"✗ {package_name} - MISSING")
     
     return missing_packages
 

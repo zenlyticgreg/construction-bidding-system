@@ -210,6 +210,265 @@ class ExcelBidGenerator:
             logger.error(f"Error creating Excel bid document: {e}")
             raise
     
+    def generate_comprehensive_bid_excel(
+        self, 
+        bid_data: Dict[str, Any], 
+        analysis_results: Dict[str, Any], 
+        output_path: str
+    ) -> None:
+        """
+        Generate comprehensive Excel bid document with multi-document analysis.
+        
+        Args:
+            bid_data: Dictionary containing bid information
+            analysis_results: Combined analysis results from multiple documents
+            output_path: Path to save the Excel file
+        """
+        try:
+            logger.info("Creating comprehensive Excel bid document")
+            
+            # Create workbook
+            wb = Workbook()
+            
+            # Remove default sheet
+            wb.remove(wb.active)
+            
+            # Create comprehensive sheets
+            self.create_comprehensive_summary_sheet(wb, bid_data, analysis_results)
+            self.create_comprehensive_line_items_sheet(wb, bid_data, analysis_results)
+            self.create_cross_reference_sheet(wb, analysis_results)
+            self.create_document_analysis_sheet(wb, analysis_results)
+            self.create_analysis_sheet(wb, bid_data)
+            
+            # Save to file
+            wb.save(output_path)
+            logger.info(f"Comprehensive Excel bid saved to: {output_path}")
+            
+        except Exception as e:
+            logger.error(f"Error creating comprehensive Excel bid: {e}")
+            raise
+    
+    def create_comprehensive_summary_sheet(
+        self, 
+        wb: Workbook, 
+        bid_data: Dict[str, Any], 
+        analysis_results: Dict[str, Any]
+    ) -> None:
+        """Create comprehensive summary sheet with multi-document analysis"""
+        
+        ws = wb.create_sheet("Executive Summary")
+        
+        # Company header
+        self._add_company_header(ws, 1)
+        
+        # Project information
+        row = 5
+        row = self._add_section_header(ws, row, "Project Information")
+        
+        ws.cell(row=row, column=1, value="Project Name:")
+        ws.cell(row=row, column=2, value=bid_data.get('project_name', 'N/A'))
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Project Number:")
+        ws.cell(row=row, column=2, value=bid_data.get('project_number', 'N/A'))
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Bid Date:")
+        ws.cell(row=row, column=2, value=bid_data.get('bid_date', 'N/A'))
+        row += 2
+        
+        # Analysis summary
+        row = self._add_section_header(ws, row, "Comprehensive Analysis Summary")
+        
+        ws.cell(row=row, column=1, value="Documents Analyzed:")
+        ws.cell(row=row, column=2, value=analysis_results.get('total_documents', 0))
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Terms Found:")
+        ws.cell(row=row, column=2, value=analysis_results.get('total_terms', 0))
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Quantities Extracted:")
+        ws.cell(row=row, column=2, value=analysis_results.get('total_quantities', 0))
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Alerts Generated:")
+        ws.cell(row=row, column=2, value=analysis_results.get('total_alerts', 0))
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Confidence Score:")
+        ws.cell(row=row, column=2, value=f"{analysis_results.get('confidence_score', 0):.1%}")
+        row += 2
+        
+        # Financial summary
+        row = self._add_section_header(ws, row, "Financial Summary")
+        
+        pricing = bid_data.get('pricing_summary', {})
+        
+        ws.cell(row=row, column=1, value="Subtotal:")
+        ws.cell(row=row, column=2, value=f"${pricing.get('subtotal', 0):,.2f}")
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Markup:")
+        ws.cell(row=row, column=2, value=f"${pricing.get('markup_amount', 0):,.2f}")
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Delivery Fee:")
+        ws.cell(row=row, column=2, value=f"${pricing.get('delivery_fee', 0):,.2f}")
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Waste Adjustments:")
+        ws.cell(row=row, column=2, value=f"${pricing.get('waste_adjustments', 0):,.2f}")
+        row += 1
+        
+        ws.cell(row=row, column=1, value="Total:")
+        ws.cell(row=row, column=2, value=f"${pricing.get('total', 0):,.2f}")
+        row += 2
+        
+        # Auto-adjust columns
+        self._auto_adjust_columns(ws)
+    
+    def create_comprehensive_line_items_sheet(
+        self, 
+        wb: Workbook, 
+        bid_data: Dict[str, Any], 
+        analysis_results: Dict[str, Any]
+    ) -> None:
+        """Create comprehensive line items sheet with cross-reference information"""
+        
+        ws = wb.create_sheet("Line Items - Comprehensive")
+        
+        # Company header
+        self._add_company_header(ws, 1)
+        
+        # Section header
+        row = self._add_section_header(ws, 5, "Comprehensive Line Items")
+        
+        # Headers
+        headers = [
+            "Item #", "Description", "CalTrans Term", "Quantity", "Unit", 
+            "Unit Price", "Total Price", "Waste Factor", "Confidence", "Cross-Reference Notes"
+        ]
+        
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.style = self.styles['header']
+        
+        row += 1
+        
+        # Line items data
+        line_items = bid_data.get('line_items', [])
+        
+        for item in line_items:
+            ws.cell(row=row, column=1, value=item.get('item_number', ''))
+            ws.cell(row=row, column=2, value=item.get('description', ''))
+            ws.cell(row=row, column=3, value=item.get('caltrans_term', ''))
+            ws.cell(row=row, column=4, value=item.get('quantity', 0))
+            ws.cell(row=row, column=5, value=item.get('unit', ''))
+            ws.cell(row=row, column=6, value=f"${item.get('unit_price', 0):,.2f}")
+            ws.cell(row=row, column=7, value=f"${item.get('total_price', 0):,.2f}")
+            ws.cell(row=row, column=8, value=f"{item.get('waste_factor', 0):.1%}")
+            ws.cell(row=row, column=9, value=f"{item.get('confidence', 0):.1%}")
+            ws.cell(row=row, column=10, value=item.get('notes', ''))
+            row += 1
+        
+        # Auto-adjust columns
+        self._auto_adjust_columns(ws)
+    
+    def create_cross_reference_sheet(self, wb: Workbook, analysis_results: Dict[str, Any]) -> None:
+        """Create cross-reference analysis sheet"""
+        
+        ws = wb.create_sheet("Cross-Reference Analysis")
+        
+        # Company header
+        self._add_company_header(ws, 1)
+        
+        # Section header
+        row = self._add_section_header(ws, 5, "Cross-Reference Analysis")
+        
+        # Term consistency
+        row = self._add_section_header(ws, row, "Term Consistency Across Documents")
+        
+        headers = ["Term", "Found In", "Consistency", "Document Count"]
+        
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.style = self.styles['header']
+        
+        row += 1
+        
+        cross_refs = analysis_results.get('cross_references', {})
+        term_matches = cross_refs.get('term_matches', [])
+        
+        for match in term_matches:
+            ws.cell(row=row, column=1, value=match.get('term', ''))
+            ws.cell(row=row, column=2, value=', '.join(match.get('found_in', [])))
+            ws.cell(row=row, column=3, value=match.get('consistency', '').title())
+            ws.cell(row=row, column=4, value=len(match.get('found_in', [])))
+            row += 1
+        
+        row += 2
+        
+        # Quantity discrepancies
+        row = self._add_section_header(ws, row, "Quantity Discrepancies")
+        
+        headers = ["Specification Value", "Bid Form Value", "Unit", "Difference %"]
+        
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.style = self.styles['header']
+        
+        row += 1
+        
+        discrepancies = cross_refs.get('quantity_discrepancies', [])
+        
+        for disc in discrepancies:
+            ws.cell(row=row, column=1, value=disc.get('specification_value', 0))
+            ws.cell(row=row, column=2, value=disc.get('bid_form_value', 0))
+            ws.cell(row=row, column=3, value=disc.get('unit', ''))
+            ws.cell(row=row, column=4, value=f"{disc.get('difference_percent', 0):.1f}%")
+            row += 1
+        
+        # Auto-adjust columns
+        self._auto_adjust_columns(ws)
+    
+    def create_document_analysis_sheet(self, wb: Workbook, analysis_results: Dict[str, Any]) -> None:
+        """Create document analysis summary sheet"""
+        
+        ws = wb.create_sheet("Document Analysis")
+        
+        # Company header
+        self._add_company_header(ws, 1)
+        
+        # Section header
+        row = self._add_section_header(ws, 5, "Document Analysis Summary")
+        
+        # Document coverage
+        row = self._add_section_header(ws, row, "Document Coverage Analysis")
+        
+        headers = ["Document Type", "Pages Analyzed", "Terms Found", "Quantities Found", "Confidence Score", "Quality Score"]
+        
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.style = self.styles['header']
+        
+        row += 1
+        
+        cross_refs = analysis_results.get('cross_references', {})
+        doc_coverage = cross_refs.get('document_coverage', {})
+        
+        for doc_type, coverage in doc_coverage.items():
+            ws.cell(row=row, column=1, value=doc_type.replace('_', ' ').title())
+            ws.cell(row=row, column=2, value=coverage.get('pages_analyzed', 0))
+            ws.cell(row=row, column=3, value=coverage.get('terms_found', 0))
+            ws.cell(row=row, column=4, value=coverage.get('quantities_found', 0))
+            ws.cell(row=row, column=5, value=f"{coverage.get('confidence_score', 0):.1%}")
+            ws.cell(row=row, column=6, value=f"{coverage.get('quality_score', 0):.1%}")
+            row += 1
+        
+        # Auto-adjust columns
+        self._auto_adjust_columns(ws)
+    
     def create_summary_sheet(self, wb: Workbook, bid_data: Dict[str, Any]) -> None:
         """
         Create Executive Summary sheet

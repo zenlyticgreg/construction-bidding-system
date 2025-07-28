@@ -71,17 +71,17 @@ class QuantityUnit(Enum):
 
 
 @dataclass
-@dataclass
 class ExtractedQuantity:
     """Represents an extracted quantity with context"""
     value: float
     unit: str
     context: str
     page_number: int
-    item: str = "Construction Item"  # ADD THIS LINE
+    item: str = "Construction Item"
     confidence: float = 1.0
     line_number: Optional[int] = None
     term_associated: Optional[str] = None
+    source_document: str = "unknown"
 
 
 @dataclass
@@ -95,6 +95,7 @@ class TermMatch:
     confidence: float = 1.0
     line_number: Optional[int] = None
     quantities: List[ExtractedQuantity] = field(default_factory=list)
+    source_document: str = "unknown"
 
 
 @dataclass
@@ -134,12 +135,39 @@ class LumberRequirements:
 
 
 @dataclass
+class BidLineItem:
+    """Represents a bid line item extracted from bid forms"""
+    item_number: str
+    description: str
+    caltrans_code: str
+    quantity: float
+    unit: str
+    unit_price: Optional[float] = None
+    total_price: Optional[float] = None
+    source_document: str = "bid_forms"
+    confidence: float = 1.0
+    notes: str = ""
+    term_matches: List[str] = field(default_factory=list)
+
+
+@dataclass
+class CrossReferenceResult:
+    """Results of cross-referencing findings across documents"""
+    term_consistency: Dict[str, List[str]] = field(default_factory=dict)  # term -> list of documents
+    quantity_discrepancies: List[Dict[str, Any]] = field(default_factory=list)
+    missing_requirements: List[Dict[str, Any]] = field(default_factory=list)
+    document_coverage: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    confidence_scores: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
 class CalTransAnalysisResult:
     """Complete analysis result for a CalTrans PDF"""
     pdf_path: str
     analysis_timestamp: datetime = field(default_factory=datetime.now)
     total_pages: int = 0
     processing_time: float = 0.0
+    document_type: str = "general"  # Added document type
     
     # Analysis results
     terminology_found: List[TermMatch] = field(default_factory=list)
@@ -210,6 +238,104 @@ class CalTransAnalysisResult:
         }
 
 
+@dataclass
+class ComprehensiveAnalysisResult:
+    """Complete analysis result for multiple project documents"""
+    analysis_timestamp: datetime = field(default_factory=datetime.now)
+    total_documents: int = 0
+    processing_time: float = 0.0
+    
+    # Individual document results
+    individual_results: Dict[str, CalTransAnalysisResult] = field(default_factory=dict)
+    
+    # Cross-reference analysis
+    cross_references: CrossReferenceResult = field(default_factory=CrossReferenceResult)
+    
+    # Combined results
+    combined_terms: List[TermMatch] = field(default_factory=list)
+    combined_quantities: List[ExtractedQuantity] = field(default_factory=list)
+    bid_line_items: List[BidLineItem] = field(default_factory=list)
+    
+    # Comprehensive alerts
+    comprehensive_alerts: List[Alert] = field(default_factory=list)
+    
+    # Summary statistics
+    total_terms: int = 0
+    total_quantities: int = 0
+    total_alerts: int = 0
+    overall_confidence: float = 1.0
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for serialization"""
+        return {
+            "analysis_timestamp": self.analysis_timestamp.isoformat(),
+            "total_documents": self.total_documents,
+            "processing_time": self.processing_time,
+            "individual_results": {
+                doc_type: result.to_dict() 
+                for doc_type, result in self.individual_results.items()
+            },
+            "cross_references": {
+                "term_consistency": self.cross_references.term_consistency,
+                "quantity_discrepancies": self.cross_references.quantity_discrepancies,
+                "missing_requirements": self.cross_references.missing_requirements,
+                "document_coverage": self.cross_references.document_coverage,
+                "confidence_scores": self.cross_references.confidence_scores
+            },
+            "combined_terms": [
+                {
+                    "term": t.term,
+                    "category": t.category,
+                    "priority": t.priority,
+                    "context": t.context,
+                    "page_number": t.page_number,
+                    "confidence": t.confidence,
+                    "source_document": getattr(t, 'source_document', 'unknown')
+                } for t in self.combined_terms
+            ],
+            "combined_quantities": [
+                {
+                    "value": q.value,
+                    "unit": q.unit,
+                    "context": q.context,
+                    "page_number": q.page_number,
+                    "confidence": q.confidence,
+                    "source_document": getattr(q, 'source_document', 'unknown')
+                } for q in self.combined_quantities
+            ],
+            "bid_line_items": [
+                {
+                    "item_number": item.item_number,
+                    "description": item.description,
+                    "caltrans_code": item.caltrans_code,
+                    "quantity": item.quantity,
+                    "unit": item.unit,
+                    "unit_price": item.unit_price,
+                    "total_price": item.total_price,
+                    "source_document": item.source_document,
+                    "confidence": item.confidence,
+                    "notes": item.notes,
+                    "term_matches": item.term_matches
+                } for item in self.bid_line_items
+            ],
+            "comprehensive_alerts": [
+                {
+                    "level": a.level.value,
+                    "message": a.message,
+                    "term": a.term,
+                    "page_number": a.page_number,
+                    "details": a.details
+                } for a in self.comprehensive_alerts
+            ],
+            "summary": {
+                "total_terms": self.total_terms,
+                "total_quantities": self.total_quantities,
+                "total_alerts": self.total_alerts,
+                "overall_confidence": self.overall_confidence
+            }
+        }
+
+
 class CalTransPDFAnalyzer:
     """Main analyzer class for CalTrans PDFs"""
     
@@ -224,12 +350,18 @@ class CalTransPDFAnalyzer:
         # Compile regex patterns for quantity extraction
         self.quantity_patterns = self._compile_quantity_patterns()
         
+        # Document-specific patterns and strategies
+        self.document_strategies = self._setup_document_strategies()
+        
         # High-priority terms to detect
         self.high_priority_terms = {
             "BALUSTER", "BLOCKOUT", "STAMPED_CONCRETE", "FRACTURED_RIB_TEXTURE",
             "RETAINING_WALL", "EROSION_CONTROL", "FALSEWORK", "FORM_FACING",
             "TYPE_86H_RAIL", "ARCHITECTURAL_TREATMENT"
         }
+        
+        # Bid form patterns for line item extraction
+        self.bid_form_patterns = self._compile_bid_form_patterns()
         
         # Lumber calculation constants
         self.lumber_constants = {
@@ -421,12 +553,13 @@ class CalTransPDFAnalyzer:
         
         return result
 
-    def analyze_pdf(self, pdf_path: str) -> CalTransAnalysisResult:
+    def analyze_pdf(self, pdf_path: str, document_type: str = "general") -> CalTransAnalysisResult:
         """
-        Analyze a CalTrans PDF file
+        Analyze a CalTrans PDF file with document-specific strategies.
         
         Args:
             pdf_path: Path to the PDF file to analyze
+            document_type: Type of document ("specifications", "bid_forms", "construction_plans", "supplemental", "general")
             
         Returns:
             CalTransAnalysisResult with complete analysis
@@ -437,10 +570,13 @@ class CalTransPDFAnalyzer:
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
         
-        self.logger.info(f"Starting analysis of PDF: {pdf_path}")
+        self.logger.info(f"Starting analysis of {document_type} PDF: {pdf_path}")
         
-        # Initialize result
-        result = CalTransAnalysisResult(pdf_path=str(pdf_path))
+        # Initialize result with document type
+        result = CalTransAnalysisResult(pdf_path=str(pdf_path), document_type=document_type)
+        
+        # Get document-specific strategy
+        strategy = self.document_strategies.get(document_type, self.document_strategies["general"])
         
         try:
             with pdfplumber.open(pdf_path) as pdf:
@@ -454,8 +590,8 @@ class CalTransPDFAnalyzer:
                     # Extract text from page
                     text = page.extract_text() or ""
                     
-                    # Analyze the page
-                    sheet_analysis = self.analyze_page(text, page_num)
+                    # Analyze the page with document-specific strategy
+                    sheet_analysis = self.analyze_page(text, page_num, document_type, strategy)
                     result.sheet_analyses.append(sheet_analysis)
                     
                     # Aggregate results
@@ -485,25 +621,33 @@ class CalTransPDFAnalyzer:
                         sa.text_extraction_quality for sa in result.sheet_analyses
                     ) / len(result.sheet_analyses)
                 
+                # Apply document-specific confidence boost
+                confidence_boost = strategy.get("confidence_boost", 1.0)
+                base_confidence = self._calculate_confidence_score(result)
+                result.confidence_score = min(1.0, base_confidence * confidence_boost)
+                
                 result.processing_time = (datetime.now() - start_time).total_seconds()
                 
-                self.logger.info(f"Analysis completed in {result.processing_time:.2f} seconds")
-                self.logger.info(f"Found {len(result.terminology_found)} terms, {len(result.quantities)} quantities")
+                self.logger.info(f"{document_type} analysis completed in {result.processing_time:.2f} seconds")
+                self.logger.info(f"Found {len(result.terminology_found)} terms, {len(result.quantities)} quantities, "
+                               f"confidence: {result.confidence_score:.2f}")
                 
         except Exception as e:
-            self.logger.error(f"Error analyzing PDF: {e}")
+            self.logger.error(f"Error analyzing {document_type} PDF: {e}")
             self.logger.error(traceback.format_exc())
             raise
         
         return result
     
-    def analyze_page(self, text: str, page_num: int) -> SheetAnalysis:
+    def analyze_page(self, text: str, page_num: int, document_type: str = "general", strategy: Dict[str, Any] = None) -> SheetAnalysis:
         """
-        Analyze a single page of text
+        Analyze a single page of text with document-specific strategies
         
         Args:
             text: Text content from the page
             page_num: Page number
+            document_type: Type of document for specialized analysis
+            strategy: Document-specific analysis strategy
             
         Returns:
             SheetAnalysis with page-specific results
@@ -516,12 +660,16 @@ class CalTransPDFAnalyzer:
             text_content=text
         )
         
-        # Extract quantities
-        quantities = self._extract_quantities(text, page_num)
+        # Use document-specific strategy if provided
+        if strategy is None:
+            strategy = self.document_strategies.get(document_type, self.document_strategies["general"])
+        
+        # Extract quantities with document-specific patterns
+        quantities = self._extract_quantities(text, page_num, document_type, strategy)
         sheet_analysis.quantities_found = quantities
         
-        # Find CalTrans terms
-        terms = self._find_caltrans_terms(text, page_num, quantities)
+        # Find CalTrans terms with document-specific focus
+        terms = self._find_caltrans_terms(text, page_num, quantities, document_type, strategy)
         sheet_analysis.terms_found = terms
         
         # Generate alerts
@@ -535,9 +683,13 @@ class CalTransPDFAnalyzer:
         
         return sheet_analysis
     
-    def _extract_quantities(self, text: str, page_num: int) -> List[ExtractedQuantity]:
-        """Extract quantities from text using regex patterns"""
+    def _extract_quantities(self, text: str, page_num: int, document_type: str = "general", strategy: Dict[str, Any] = None) -> List[ExtractedQuantity]:
+        """Extract quantities from text using document-specific patterns"""
         quantities = []
+        
+        # Use document-specific strategy if provided
+        if strategy is None:
+            strategy = self.document_strategies.get(document_type, self.document_strategies["general"])
         
         # Split text into lines for better context
         lines = text.split('\n')
@@ -554,12 +706,28 @@ class CalTransPDFAnalyzer:
                             # Extract context around the match
                             context = self.extract_context(line, match.group(0), 50)
                             
+                            # Apply document-specific confidence adjustments
+                            base_confidence = 1.0
+                            if document_type == "bid_forms":
+                                # Higher confidence for quantities in bid forms
+                                base_confidence = 1.2
+                            elif document_type == "specifications":
+                                # High confidence for specifications
+                                base_confidence = 1.1
+                            elif document_type == "construction_plans":
+                                # Medium confidence for plans
+                                base_confidence = 0.9
+                            elif document_type == "supplemental":
+                                # Lower confidence for supplemental documents
+                                base_confidence = 0.8
+                            
                             quantity = ExtractedQuantity(
                                 value=value,
                                 unit=unit,
                                 context=context,
                                 page_number=page_num,
-                                line_number=line_num
+                                line_number=line_num,
+                                confidence=min(1.0, base_confidence)
                             )
                             quantities.append(quantity)
                             
@@ -568,9 +736,16 @@ class CalTransPDFAnalyzer:
         
         return quantities
     
-    def _find_caltrans_terms(self, text: str, page_num: int, quantities: List[ExtractedQuantity]) -> List[TermMatch]:
-        """Find CalTrans terms in text"""
+    def _find_caltrans_terms(self, text: str, page_num: int, quantities: List[ExtractedQuantity], document_type: str = "general", strategy: Dict[str, Any] = None) -> List[TermMatch]:
+        """Find CalTrans terms in text with document-specific focus"""
         terms = []
+        
+        # Use document-specific strategy if provided
+        if strategy is None:
+            strategy = self.document_strategies.get(document_type, self.document_strategies["general"])
+        
+        # Get focus terms for this document type
+        focus_terms = strategy.get("focus_terms", [])
         
         # Check all term categories
         term_categories = [
@@ -593,13 +768,33 @@ class CalTransPDFAnalyzer:
                         term, quantities, context
                     )
                     
+                    # Apply document-specific confidence adjustments
+                    base_confidence = 1.0
+                    if document_type == "specifications":
+                        # Higher confidence for specifications
+                        base_confidence = 1.2
+                    elif document_type == "bid_forms":
+                        # High confidence for bid forms
+                        base_confidence = 1.1
+                    elif document_type == "construction_plans":
+                        # Medium confidence for plans
+                        base_confidence = 0.9
+                    elif document_type == "supplemental":
+                        # Lower confidence for supplemental documents
+                        base_confidence = 0.8
+                    
+                    # Boost confidence for focus terms
+                    if any(focus_term in term.upper() for focus_term in focus_terms):
+                        base_confidence *= 1.1
+                    
                     term_match = TermMatch(
                         term=term,
                         category=category_name,
                         priority=term_data.get("priority", "medium"),
                         context=context,
                         page_number=page_num,
-                        quantities=associated_quantities
+                        quantities=associated_quantities,
+                        confidence=min(1.0, base_confidence)
                     )
                     terms.append(term_match)
         
@@ -813,6 +1008,471 @@ class CalTransPDFAnalyzer:
         
         quality = 1.0 - (issues / total_checks)
         return max(0.0, min(1.0, quality))
+    
+    def _setup_document_strategies(self) -> Dict[str, Dict[str, Any]]:
+        """Setup document-specific analysis strategies"""
+        return {
+            "specifications": {
+                "focus_terms": ["MATERIAL", "SPECIFICATION", "STANDARD", "REQUIREMENT", "COMPLIANCE"],
+                "quantity_patterns": ["material_specs", "standards", "requirements"],
+                "confidence_boost": 1.2,  # Higher confidence for specifications
+                "extraction_priority": "high"
+            },
+            "bid_forms": {
+                "focus_terms": ["ITEM", "QUANTITY", "UNIT", "PRICE", "TOTAL", "BID"],
+                "quantity_patterns": ["precise_quantities", "pricing", "line_items"],
+                "confidence_boost": 1.0,
+                "extraction_priority": "critical"
+            },
+            "construction_plans": {
+                "focus_terms": ["DIMENSION", "AREA", "LENGTH", "WIDTH", "HEIGHT", "DETAIL"],
+                "quantity_patterns": ["dimensions", "areas", "volumes"],
+                "confidence_boost": 0.9,
+                "extraction_priority": "medium"
+            },
+            "supplemental": {
+                "focus_terms": ["MODIFICATION", "ADDENDUM", "CHANGE", "SPECIAL", "ADDITIONAL"],
+                "quantity_patterns": ["modifications", "changes", "additions"],
+                "confidence_boost": 0.8,
+                "extraction_priority": "low"
+            },
+            "general": {
+                "focus_terms": ["CONSTRUCTION", "MATERIAL", "QUANTITY", "SPECIFICATION"],
+                "quantity_patterns": ["general", "mixed"],
+                "confidence_boost": 1.0,
+                "extraction_priority": "medium"
+            }
+        }
+    
+    def _compile_bid_form_patterns(self) -> Dict[str, re.Pattern]:
+        """Compile patterns for extracting bid line items"""
+        return {
+            "item_number": re.compile(r"(\d+\.?\d*)\s*[A-Z]?", re.IGNORECASE),
+            "description": re.compile(r"([A-Z][A-Z\s\d\-\.]+(?:[A-Z][A-Z\s\d\-\.]+)*)", re.IGNORECASE),
+            "quantity": re.compile(r"(\d+(?:,\d{3})*(?:\.\d+)?)\s*([A-Z]{2,4})", re.IGNORECASE),
+            "unit_price": re.compile(r"\$?\s*(\d+(?:,\d{3})*(?:\.\d{2})?)", re.IGNORECASE),
+            "total_price": re.compile(r"\$?\s*(\d+(?:,\d{3})*(?:\.\d{2})?)\s*$", re.IGNORECASE),
+            "caltrans_code": re.compile(r"([A-Z]{2,4}\s*\d{3,4}[A-Z]?)", re.IGNORECASE)
+        }
+    
+    def analyze_multiple_files(self, file_paths_dict: Dict[str, str]) -> ComprehensiveAnalysisResult:
+        """
+        Analyze multiple project documents with comprehensive cross-referencing.
+        
+        Args:
+            file_paths_dict: Dictionary mapping document types to file paths
+                {"specifications": path, "bid_forms": path, "plans": path, "supplemental": path}
+        
+        Returns:
+            ComprehensiveAnalysisResult with combined analysis and cross-references
+        """
+        start_time = datetime.now()
+        self.logger.info(f"Starting comprehensive analysis of {len(file_paths_dict)} documents")
+        
+        # Initialize comprehensive result
+        comprehensive_result = ComprehensiveAnalysisResult()
+        comprehensive_result.total_documents = len(file_paths_dict)
+        
+        # Process files in priority order
+        priority_order = ["specifications", "bid_forms", "construction_plans", "supplemental"]
+        
+        for doc_type in priority_order:
+            if doc_type in file_paths_dict:
+                file_path = file_paths_dict[doc_type]
+                self.logger.info(f"Processing {doc_type}: {file_path}")
+                
+                try:
+                    # Analyze individual document
+                    result = self.analyze_pdf(file_path, document_type=doc_type)
+                    comprehensive_result.individual_results[doc_type] = result
+                    
+                    # Add source document information to findings
+                    for term in result.terminology_found:
+                        term.source_document = doc_type
+                        comprehensive_result.combined_terms.append(term)
+                    
+                    for quantity in result.quantities:
+                        quantity.source_document = doc_type
+                        comprehensive_result.combined_quantities.append(quantity)
+                    
+                    # Extract bid line items if this is a bid form
+                    if doc_type == "bid_forms":
+                        bid_items = self.extract_bid_line_items(result)
+                        comprehensive_result.bid_line_items.extend(bid_items)
+                    
+                    self.logger.info(f"Completed {doc_type} analysis: {len(result.terminology_found)} terms, {len(result.quantities)} quantities")
+                    
+                except Exception as e:
+                    self.logger.error(f"Error analyzing {doc_type} document: {e}")
+                    comprehensive_result.comprehensive_alerts.append(Alert(
+                        level=AlertLevel.ERROR,
+                        message=f"Failed to analyze {doc_type} document: {str(e)}",
+                        details={"document_type": doc_type, "file_path": file_path}
+                    ))
+        
+        # Perform cross-reference analysis
+        if len(comprehensive_result.individual_results) > 1:
+            comprehensive_result.cross_references = self.cross_reference_findings(
+                comprehensive_result.individual_results
+            )
+        
+        # Generate comprehensive alerts
+        comprehensive_result.comprehensive_alerts.extend(
+            self._generate_comprehensive_alerts(
+                comprehensive_result.individual_results,
+                comprehensive_result.cross_references
+            )
+        )
+        
+        # Calculate summary statistics
+        comprehensive_result.total_terms = len(comprehensive_result.combined_terms)
+        comprehensive_result.total_quantities = len(comprehensive_result.combined_quantities)
+        comprehensive_result.total_alerts = len(comprehensive_result.comprehensive_alerts)
+        
+        # Calculate overall confidence
+        if comprehensive_result.individual_results:
+            total_confidence = sum(result.confidence_score for result in comprehensive_result.individual_results.values())
+            comprehensive_result.overall_confidence = total_confidence / len(comprehensive_result.individual_results)
+        
+        # Calculate processing time
+        comprehensive_result.processing_time = (datetime.now() - start_time).total_seconds()
+        
+        self.logger.info(f"Comprehensive analysis completed: {comprehensive_result.total_terms} terms, "
+                        f"{comprehensive_result.total_quantities} quantities, "
+                        f"{comprehensive_result.total_alerts} alerts")
+        
+        return comprehensive_result
+    
+    def cross_reference_findings(self, analysis_results_list: List[CalTransAnalysisResult]) -> Dict[str, Any]:
+        """
+        Compare terminology found across documents and validate quantity consistency.
+        
+        Args:
+            analysis_results_list: List of analysis results from different documents
+            
+        Returns:
+            Dictionary with cross-reference analysis results
+        """
+        self.logger.info("Starting cross-reference analysis across documents")
+        
+        cross_ref_result = CrossReferenceResult()
+        
+        # Extract terms and quantities by document
+        terms_by_doc = {}
+        quantities_by_doc = {}
+        
+        for result in analysis_results_list:
+            doc_type = result.document_type
+            terms_by_doc[doc_type] = [term.term for term in result.terminology_found]
+            quantities_by_doc[doc_type] = result.quantities
+        
+        # Check term consistency across documents
+        all_terms = set()
+        for terms in terms_by_doc.values():
+            all_terms.update(terms)
+        
+        for term in all_terms:
+            found_in = [doc_type for doc_type, terms in terms_by_doc.items() if term in terms]
+            if len(found_in) > 1:
+                cross_ref_result.term_consistency[term] = found_in
+        
+        # Check quantity discrepancies between bid forms and other documents
+        if "bid_forms" in quantities_by_doc:
+            bid_quantities = quantities_by_doc["bid_forms"]
+            
+            for doc_type, quantities in quantities_by_doc.items():
+                if doc_type != "bid_forms":
+                    for bid_qty in bid_quantities:
+                        for other_qty in quantities:
+                            if bid_qty.unit == other_qty.unit:
+                                # Check for significant discrepancies (10% threshold)
+                                diff_percent = abs(bid_qty.value - other_qty.value) / max(bid_qty.value, other_qty.value) * 100
+                                if diff_percent > 10:
+                                    cross_ref_result.quantity_discrepancies.append({
+                                        "term": bid_qty.term_associated or "Unknown",
+                                        "bid_forms_value": bid_qty.value,
+                                        "other_doc_value": other_qty.value,
+                                        "other_doc_type": doc_type,
+                                        "difference_percent": diff_percent,
+                                        "unit": bid_qty.unit
+                                    })
+        
+        # Check for missing requirements (terms in specs but not in other docs)
+        if "specifications" in terms_by_doc:
+            spec_terms = set(terms_by_doc["specifications"])
+            for doc_type, terms in terms_by_doc.items():
+                if doc_type != "specifications":
+                    missing = spec_terms - set(terms)
+                    for missing_term in missing:
+                        cross_ref_result.missing_requirements.append({
+                            "term": missing_term,
+                            "required_in": "specifications",
+                            "missing_from": doc_type
+                        })
+        
+        # Calculate document coverage analysis
+        for result in analysis_results_list:
+            doc_type = result.document_type
+            cross_ref_result.document_coverage[doc_type] = {
+                "pages_analyzed": result.total_pages,
+                "terms_found": len(result.terminology_found),
+                "quantities_found": len(result.quantities),
+                "confidence_score": result.confidence_score,
+                "quality_score": result.text_extraction_quality
+            }
+            cross_ref_result.confidence_scores[doc_type] = result.confidence_score
+        
+        self.logger.info(f"Cross-reference analysis completed: {len(cross_ref_result.term_consistency)} consistent terms, "
+                        f"{len(cross_ref_result.quantity_discrepancies)} discrepancies")
+        
+        return cross_ref_result
+    
+    def extract_bid_line_items(self, analysis_result: CalTransAnalysisResult) -> List[BidLineItem]:
+        """
+        Parse official bid forms for line items.
+        
+        Args:
+            analysis_result: Analysis result from bid forms document
+            
+        Returns:
+            List of structured bid line items
+        """
+        self.logger.info("Extracting bid line items from bid forms")
+        
+        bid_items = []
+        
+        # Extract text from all pages
+        full_text = ""
+        for sheet_analysis in analysis_result.sheet_analyses:
+            full_text += sheet_analysis.text_content + "\n"
+        
+        # Split into lines for processing
+        lines = full_text.split('\n')
+        
+        for line_num, line in enumerate(lines, 1):
+            try:
+                # Look for line item patterns
+                item_match = self.bid_form_patterns["item_number"].search(line)
+                if not item_match:
+                    continue
+                
+                item_number = item_match.group(1)
+                
+                # Extract description
+                desc_match = self.bid_form_patterns["description"].search(line)
+                description = desc_match.group(1) if desc_match else "No description"
+                
+                # Extract quantity and unit
+                qty_match = self.bid_form_patterns["quantity"].search(line)
+                if qty_match:
+                    quantity = float(qty_match.group(1).replace(',', ''))
+                    unit = qty_match.group(2)
+                else:
+                    quantity = 0.0
+                    unit = "EA"
+                
+                # Extract CalTrans code
+                code_match = self.bid_form_patterns["caltrans_code"].search(line)
+                caltrans_code = code_match.group(1) if code_match else "N/A"
+                
+                # Extract unit price
+                price_match = self.bid_form_patterns["unit_price"].search(line)
+                unit_price = float(price_match.group(1).replace(',', '')) if price_match else None
+                
+                # Extract total price
+                total_match = self.bid_form_patterns["total_price"].search(line)
+                total_price = float(total_match.group(1).replace(',', '')) if total_match else None
+                
+                # Find matching terms from analysis
+                term_matches = []
+                for term in analysis_result.terminology_found:
+                    if term.term.lower() in description.lower():
+                        term_matches.append(term.term)
+                
+                # Calculate confidence based on completeness
+                confidence = 1.0
+                if not description or description == "No description":
+                    confidence *= 0.8
+                if not caltrans_code or caltrans_code == "N/A":
+                    confidence *= 0.9
+                if unit_price is None:
+                    confidence *= 0.95
+                
+                bid_item = BidLineItem(
+                    item_number=item_number,
+                    description=description,
+                    caltrans_code=caltrans_code,
+                    quantity=quantity,
+                    unit=unit,
+                    unit_price=unit_price,
+                    total_price=total_price,
+                    confidence=confidence,
+                    term_matches=term_matches
+                )
+                
+                bid_items.append(bid_item)
+                
+            except Exception as e:
+                self.logger.warning(f"Error parsing bid line item on line {line_num}: {e}")
+                continue
+        
+        self.logger.info(f"Extracted {len(bid_items)} bid line items")
+        return bid_items
+    
+    def _calculate_confidence_score(self, result: CalTransAnalysisResult) -> float:
+        """
+        Calculate confidence score for analysis results.
+        
+        Args:
+            result: Analysis result to evaluate
+            
+        Returns:
+            Confidence score between 0.0 and 1.0
+        """
+        # Base confidence on text extraction quality
+        confidence = result.text_extraction_quality
+        
+        # Boost confidence for high-priority terms found
+        if result.high_priority_terms > 0:
+            confidence += min(0.2, result.high_priority_terms * 0.05)
+        
+        # Boost confidence for quantities found
+        if result.total_quantities > 0:
+            confidence += min(0.1, result.total_quantities * 0.01)
+        
+        # Reduce confidence for critical alerts
+        if result.critical_alerts > 0:
+            confidence -= min(0.3, result.critical_alerts * 0.1)
+        
+        return max(0.0, min(1.0, confidence))
+    
+    def _cross_reference_findings(self, individual_results: Dict[str, CalTransAnalysisResult]) -> Dict[str, Any]:
+        """Cross-reference findings between different documents"""
+        
+        cross_refs = {
+            'term_matches': [],
+            'quantity_discrepancies': [],
+            'missing_requirements': [],
+            'document_coverage': {}
+        }
+        
+        # Extract all terms and quantities by category
+        terms_by_category = {}
+        quantities_by_category = {}
+        
+        for category, result in individual_results.items():
+            terms_by_category[category] = [term.term for term in result.terminology_found]
+            quantities_by_category[category] = result.quantities
+        
+        # Check for term matches across documents
+        all_terms = set()
+        for terms in terms_by_category.values():
+            all_terms.update(terms)
+        
+        for term in all_terms:
+            found_in = [cat for cat, terms in terms_by_category.items() if term in terms]
+            if len(found_in) > 1:
+                cross_refs['term_matches'].append({
+                    'term': term,
+                    'found_in': found_in,
+                    'consistency': 'high' if len(found_in) == len(individual_results) else 'partial'
+                })
+        
+        # Check for quantity discrepancies
+        if 'specifications' in quantities_by_category and 'bid_forms' in quantities_by_category:
+            spec_quantities = quantities_by_category['specifications']
+            bid_quantities = quantities_by_category['bid_forms']
+            
+            for spec_qty in spec_quantities:
+                for bid_qty in bid_quantities:
+                    if (spec_qty.unit == bid_qty.unit and 
+                        abs(spec_qty.value - bid_qty.value) / max(spec_qty.value, 1) > 0.1):  # 10% threshold
+                        cross_refs['quantity_discrepancies'].append({
+                            'specification_value': spec_qty.value,
+                            'bid_form_value': bid_qty.value,
+                            'unit': spec_qty.unit,
+                            'difference_percent': abs(spec_qty.value - bid_qty.value) / spec_qty.value * 100
+                        })
+        
+        # Check for missing requirements
+        if 'specifications' in individual_results:
+            spec_terms = set(terms_by_category.get('specifications', []))
+            for category, terms in terms_by_category.items():
+                if category != 'specifications':
+                    missing = spec_terms - set(terms)
+                    if missing:
+                        cross_refs['missing_requirements'].append({
+                            'category': category,
+                            'missing_terms': list(missing)
+                        })
+        
+        # Document coverage analysis
+        for category, result in individual_results.items():
+            cross_refs['document_coverage'][category] = {
+                'pages_analyzed': result.total_pages,
+                'terms_found': len(result.terminology_found),
+                'quantities_found': len(result.quantities),
+                'confidence_score': result.confidence_score,
+                'quality_score': result.text_extraction_quality
+            }
+        
+        return cross_refs
+    
+    def _generate_comprehensive_alerts(self, individual_results: Dict[str, CalTransAnalysisResult], 
+                                     cross_references: Dict[str, Any]) -> List[Alert]:
+        """Generate comprehensive alerts based on cross-referenced findings"""
+        
+        alerts = []
+        
+        # Check for quantity discrepancies
+        for discrepancy in cross_references.get('quantity_discrepancies', []):
+            alerts.append(Alert(
+                level=AlertLevel.HIGH,
+                message=f"Quantity discrepancy detected: {discrepancy['specification_value']} vs {discrepancy['bid_form_value']} {discrepancy['unit']} ({discrepancy['difference_percent']:.1f}% difference)",
+                details=discrepancy
+            ))
+        
+        # Check for missing requirements
+        for missing in cross_references.get('missing_requirements', []):
+            alerts.append(Alert(
+                level=AlertLevel.WARNING,
+                message=f"Missing requirements in {missing['category']}: {', '.join(missing['missing_terms'][:3])}",
+                details=missing
+            ))
+        
+        # Check for low confidence scores
+        low_confidence_files = [
+            (cat, result.confidence_score) 
+            for cat, result in individual_results.items() 
+            if result.confidence_score < 0.7
+        ]
+        
+        for category, confidence in low_confidence_files:
+            alerts.append(Alert(
+                level=AlertLevel.WARNING,
+                message=f"Low confidence analysis for {category}: {confidence:.1%}",
+                details={'category': category, 'confidence': confidence}
+            ))
+        
+        # Check for critical terms found
+        critical_terms_found = []
+        for category, result in individual_results.items():
+            for term in result.terminology_found:
+                if term.term in self.high_priority_terms:
+                    critical_terms_found.append({
+                        'term': term.term,
+                        'category': category,
+                        'priority': term.priority
+                    })
+        
+        if critical_terms_found:
+            alerts.append(Alert(
+                level=AlertLevel.INFO,
+                message=f"Critical terms found: {', '.join([t['term'] for t in critical_terms_found[:5]])}",
+                details={'critical_terms': critical_terms_found}
+            ))
+        
+        return alerts
 
 
 # Utility functions for external use
