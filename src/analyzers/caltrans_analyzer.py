@@ -721,12 +721,16 @@ class CalTransPDFAnalyzer:
                                 # Lower confidence for supplemental documents
                                 base_confidence = 0.8
                             
+                            # Classify the material type using enhanced classification
+                            material_type = self.classify_material_type(context, value, unit)
+                            
                             quantity = ExtractedQuantity(
                                 value=value,
                                 unit=unit,
                                 context=context,
                                 page_number=page_num,
                                 line_number=line_num,
+                                item=material_type,
                                 confidence=min(1.0, base_confidence)
                             )
                             quantities.append(quantity)
@@ -892,6 +896,116 @@ class CalTransPDFAnalyzer:
             return "temporary_structures"
         
         return "general"
+    
+    def classify_material_type(self, text_context: str, quantity: float, unit: str) -> str:
+        """Enhanced material type classification based on context and CalTrans terminology"""
+        
+        if not text_context:
+            text_context = ""
+        
+        context_upper = text_context.upper()
+        
+        # CalTrans specific terms (highest priority)
+        caltrans_terms = {
+            'BALUSTER': 'Bridge Balusters',
+            'BLOCKOUT': 'Blockout Forms', 
+            'FALSEWORK': 'Falsework System',
+            'FRACTURED RIB': 'Fractured Rib Texture',
+            'RETAINING WALL': 'Retaining Wall Forms',
+            'EROSION CONTROL': 'Erosion Control',
+            'TYPE 86H': 'Bridge Railing System'
+        }
+        
+        for term, material in caltrans_terms.items():
+            if term in context_upper:
+                return material
+        
+        # Concrete identification (CY units + concrete keywords)
+        if unit == 'CY':
+            if any(keyword in context_upper for keyword in ['CONCRETE', 'CONC', 'CIP', 'CAST IN PLACE', 'POUR']):
+                if 'STRUCTURAL' in context_upper:
+                    return 'Structural Concrete'
+                elif any(decorative in context_upper for decorative in ['STAMPED', 'DECORATIVE', 'TEXTURED', 'FRACTURED']):
+                    return 'Decorative Concrete'
+                elif quantity > 20:
+                    return 'Ready-Mix Concrete'
+                else:
+                    return 'Specialty Concrete'
+            else:
+                return 'Concrete Volume'
+        
+        # Steel identification (tons/lbs + steel keywords)  
+        if unit in ['LB', 'TON']:
+            if any(keyword in context_upper for keyword in ['REBAR', 'REINFORCEMENT', 'REINFORCING']):
+                return 'Reinforcement Steel'
+            elif any(keyword in context_upper for keyword in ['W12', 'W14', 'W16', 'W18', 'W21', 'HSS', 'BEAM', 'COLUMN']):
+                return 'Structural Steel'
+            elif 'STEEL' in context_upper:
+                return 'Steel Material'
+            else:
+                return 'Metal/Hardware'
+        
+        # Lumber identification (BF/LF + lumber keywords)
+        if unit in ['BF', 'LF']:
+            # Check for dimensional lumber first (highest priority)
+            if any(keyword in context_upper for keyword in ['2X4', '2X6', '2X8', '2X10', '2X12', '4X4', '6X6']):
+                return 'Dimensional Lumber'
+            elif 'PLYWOOD' in context_upper:
+                return 'Plywood Sheathing'
+            elif any(keyword in context_upper for keyword in ['LUMBER', 'WOOD', 'TIMBER']):
+                if any(form_word in context_upper for form_word in ['FORM', 'FORMING', 'FORMWORK']):
+                    return 'Form Lumber'
+                elif any(frame_word in context_upper for frame_word in ['FRAME', 'FRAMING', 'STRUCTURAL']):
+                    return 'Framing Lumber'
+                else:
+                    return 'Construction Lumber'
+            else:
+                return 'Lumber Material'
+        
+        # Formwork identification (SF + form keywords)
+        if unit == 'SF':
+            if 'PLYWOOD' in context_upper:
+                return 'Plywood Sheathing'
+            elif any(keyword in context_upper for keyword in ['FORM', 'FORMWORK', 'FORMING']):
+                return 'Concrete Formwork'
+            elif any(keyword in context_upper for keyword in ['FLOOR', 'FLOORING']):
+                return 'Flooring Material'
+            elif any(keyword in context_upper for keyword in ['ROOF', 'ROOFING']):
+                return 'Roofing Material'
+            elif any(keyword in context_upper for keyword in ['WALL', 'DRYWALL', 'GWB']):
+                return 'Wall Finishes'
+            elif quantity > 1000:
+                return 'Large Area Material'
+            else:
+                return 'Area Material'
+        
+        # Door/Window identification (EA + door/window keywords)
+        if unit == 'EA':
+            if any(keyword in context_upper for keyword in ['DOOR', 'DR']):
+                return 'Doors & Hardware'
+            elif any(keyword in context_upper for keyword in ['WINDOW', 'WIN']):
+                return 'Windows'
+            elif quantity > 50:
+                return 'Hardware/Fasteners'
+            elif quantity < 20:
+                return 'Building Components'
+            else:
+                return 'Count Items'
+        
+        # Fallback based on unit with quantity context
+        unit_defaults = {
+            'CY': 'Concrete/Volume',
+            'SF': 'Area Material', 
+            'LF': 'Linear Material',
+            'EA': 'Count Items',
+            'LB': 'Steel/Hardware',
+            'TON': 'Heavy Materials',
+            'BF': 'Lumber',
+            'GAL': 'Liquids/Coatings',
+            'SY': 'Area Materials'
+        }
+        
+        return unit_defaults.get(unit, f'{unit} Material')
     
     def _generate_alerts(self, terms: List[TermMatch], quantities: List[ExtractedQuantity], page_num: int) -> List[Alert]:
         """Generate alerts based on terms and quantities"""
